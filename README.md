@@ -127,12 +127,15 @@ transitops
 
 Developed for the **Odoo Hackathon**.
 
+Team Leader:
+
+- Vivek
+
 Team Members:
 
 - Vishw
 - Smit
 - Pratham
-- Vivek
 
 ---
 
