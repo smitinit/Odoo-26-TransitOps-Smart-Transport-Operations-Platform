@@ -7,8 +7,8 @@ import { PermissionGuard } from "@/components/auth/permission-guard"
 import { useAuth } from "@/components/auth/auth-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { FieldLabel } from "@/components/form-field-label"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -487,7 +487,7 @@ function FuelExpensesWorkspace() {
             onSubmit={(event) => void handleLogFuel(event)}
           >
             <div className="grid gap-2">
-              <Label>Vehicle</Label>
+              <FieldLabel>Vehicle</FieldLabel>
               <Select
                 value={fuelForm.vehicle_id}
                 onValueChange={(value) =>
@@ -509,7 +509,7 @@ function FuelExpensesWorkspace() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="date_filled">Date</Label>
+              <FieldLabel htmlFor="date_filled">Date</FieldLabel>
               <Input
                 id="date_filled"
                 type="date"
@@ -522,7 +522,7 @@ function FuelExpensesWorkspace() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
-                <Label htmlFor="liters">Liters</Label>
+                <FieldLabel htmlFor="liters">Liters</FieldLabel>
                 <Input
                   id="liters"
                   type="number"
@@ -536,7 +536,7 @@ function FuelExpensesWorkspace() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="fuel_cost">Fuel cost</Label>
+                <FieldLabel htmlFor="fuel_cost">Fuel cost</FieldLabel>
                 <Input
                   id="fuel_cost"
                   type="number"
@@ -580,7 +580,9 @@ function FuelExpensesWorkspace() {
             onSubmit={(event) => void handleAddExpense(event)}
           >
             <div className="grid gap-2">
-              <Label>Trip (optional)</Label>
+              <FieldLabel tooltip="Linking a trip can auto-fill the vehicle for this expense.">
+                Trip (optional)
+              </FieldLabel>
               <Select
                 value={expenseForm.trip_id || undefined}
                 onValueChange={(value) => {
@@ -607,7 +609,7 @@ function FuelExpensesWorkspace() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label>Vehicle</Label>
+              <FieldLabel>Vehicle</FieldLabel>
               <Select
                 value={expenseForm.vehicle_id}
                 onValueChange={(value) =>
@@ -629,7 +631,9 @@ function FuelExpensesWorkspace() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label>Type</Label>
+              <FieldLabel tooltip="Toll / Other for trip costs. Maintenance (linked) ties a shop charge to the trip.">
+                Type
+              </FieldLabel>
               <Select
                 value={expenseForm.expense_type}
                 onValueChange={(value) =>
@@ -653,7 +657,7 @@ function FuelExpensesWorkspace() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
-                <Label htmlFor="amount">Amount</Label>
+                <FieldLabel htmlFor="amount">Amount</FieldLabel>
                 <Input
                   id="amount"
                   type="number"
@@ -667,7 +671,7 @@ function FuelExpensesWorkspace() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="date_incurred">Date</Label>
+                <FieldLabel htmlFor="date_incurred">Date</FieldLabel>
                 <Input
                   id="date_incurred"
                   type="date"
@@ -683,7 +687,7 @@ function FuelExpensesWorkspace() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">Notes</Label>
+              <FieldLabel htmlFor="description">Notes</FieldLabel>
               <Input
                 id="description"
                 value={expenseForm.description}

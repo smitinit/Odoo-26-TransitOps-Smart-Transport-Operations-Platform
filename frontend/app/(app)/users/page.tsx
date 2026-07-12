@@ -6,10 +6,11 @@ import { PlusIcon, PencilIcon, Trash2Icon } from "lucide-react"
 
 import { AdminGuard } from "@/components/auth/admin-guard"
 import { useAuth } from "@/components/auth/auth-provider"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { FieldLabel } from "@/components/form-field-label"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -73,6 +74,8 @@ function UsersManagementPage() {
   const [saving, setSaving] = React.useState(false)
   const [sheetOpen, setSheetOpen] = React.useState(false)
   const [editingUser, setEditingUser] = React.useState<User | null>(null)
+  const [pendingDelete, setPendingDelete] = React.useState<User | null>(null)
+  const [deleting, setDeleting] = React.useState(false)
   const [form, setForm] = React.useState<FormState>(emptyForm)
 
   const roleNameById = new Map(roles.map((role) => [role.id, role.name]))
@@ -186,24 +189,26 @@ function UsersManagementPage() {
     }
   }
 
-  async function handleDelete(user: User) {
-    if (user.id === currentUser?.id) {
+  async function handleDelete() {
+    if (!pendingDelete) return
+    if (pendingDelete.id === currentUser?.id) {
       toast.error("You cannot delete your own account")
+      setPendingDelete(null)
       return
     }
-    const confirmed = window.confirm(
-      `Delete ${user.first_name} ${user.last_name}? This cannot be undone from the UI.`
-    )
-    if (!confirmed) return
 
+    setDeleting(true)
     try {
-      await deleteUser(user.id)
+      await deleteUser(pendingDelete.id)
       toast.success("User deleted")
+      setPendingDelete(null)
       await loadData()
     } catch (error) {
       const message =
         error instanceof ApiError ? error.message : "Failed to delete user"
       toast.error(message)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -301,7 +306,7 @@ function UsersManagementPage() {
                         variant="ghost"
                         size="icon-sm"
                         disabled={user.id === currentUser?.id}
-                        onClick={() => void handleDelete(user)}
+                        onClick={() => setPendingDelete(user)}
                         aria-label={`Delete ${user.email}`}
                       >
                         <Trash2Icon className="text-destructive" />
@@ -334,7 +339,7 @@ function UsersManagementPage() {
             onSubmit={(event) => void handleSubmit(event)}
           >
             <div className="grid gap-2">
-              <Label htmlFor="first_name">First name</Label>
+              <FieldLabel htmlFor="first_name">First name</FieldLabel>
               <Input
                 id="first_name"
                 required
@@ -343,7 +348,7 @@ function UsersManagementPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="last_name">Last name</Label>
+              <FieldLabel htmlFor="last_name">Last name</FieldLabel>
               <Input
                 id="last_name"
                 required
@@ -352,7 +357,7 @@ function UsersManagementPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <FieldLabel htmlFor="email">Email</FieldLabel>
               <Input
                 id="email"
                 type="email"
@@ -362,7 +367,7 @@ function UsersManagementPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">
+              <FieldLabel htmlFor="password">
                 Password
                 {editingUser ? (
                   <span className="font-normal text-muted-foreground">
@@ -370,7 +375,7 @@ function UsersManagementPage() {
                     (leave blank to keep)
                   </span>
                 ) : null}
-              </Label>
+              </FieldLabel>
               <Input
                 id="password"
                 type="password"
@@ -381,7 +386,12 @@ function UsersManagementPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="role">Role</Label>
+              <FieldLabel
+                htmlFor="role"
+                tooltip="Controls which pages and actions this user can access (Fleet Manager, Driver, Safety Officer, etc.)."
+              >
+                Role
+              </FieldLabel>
               <Select
                 value={form.role_id || "none"}
                 onValueChange={(value) =>
@@ -412,7 +422,7 @@ function UsersManagementPage() {
                 checked={form.is_active}
                 onChange={(e) => updateField("is_active", e.target.checked)}
               />
-              <Label htmlFor="is_active">Active</Label>
+              <FieldLabel htmlFor="is_active">Active</FieldLabel>
             </div>
             <div className="flex items-center gap-3">
               <input
@@ -422,7 +432,12 @@ function UsersManagementPage() {
                 checked={form.is_superuser}
                 onChange={(e) => updateField("is_superuser", e.target.checked)}
               />
-              <Label htmlFor="is_superuser">Superuser (admin)</Label>
+              <FieldLabel
+                htmlFor="is_superuser"
+                tooltip="Full admin access, including user management, even without a role."
+              >
+                Superuser (admin)
+              </FieldLabel>
             </div>
           </form>
 
@@ -445,6 +460,28 @@ function UsersManagementPage() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      <ConfirmActionDialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null)
+        }}
+        title="Delete user?"
+        description={
+          pendingDelete ? (
+            <>
+              Delete{" "}
+              <span className="font-semibold text-foreground">
+                {pendingDelete.first_name} {pendingDelete.last_name}
+              </span>
+              ? This cannot be undone from the UI.
+            </>
+          ) : null
+        }
+        confirmLabel="Delete user"
+        pending={deleting}
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }

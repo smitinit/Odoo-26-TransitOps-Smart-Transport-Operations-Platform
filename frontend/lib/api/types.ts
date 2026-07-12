@@ -442,6 +442,14 @@ export type AnalyticsOverviewParams = {
   date_to?: string
 }
 
+export type GeneralSettings = {
+  depot_name: string
+  currency: string
+  distance_unit: string
+}
+
+export type GeneralSettingsUpdate = Partial<GeneralSettings>
+
 export class ApiError extends Error {
   status: number
   errors: unknown[]

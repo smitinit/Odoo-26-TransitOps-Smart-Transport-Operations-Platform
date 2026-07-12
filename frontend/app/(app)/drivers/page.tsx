@@ -6,10 +6,11 @@ import { PlusIcon, PencilIcon, Trash2Icon } from "lucide-react"
 
 import { PermissionGuard } from "@/components/auth/permission-guard"
 import { useAuth } from "@/components/auth/auth-provider"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { FieldLabel } from "@/components/form-field-label"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -127,6 +128,8 @@ function DriversRegistryPage() {
   const [saving, setSaving] = React.useState(false)
   const [sheetOpen, setSheetOpen] = React.useState(false)
   const [editing, setEditing] = React.useState<Driver | null>(null)
+  const [pendingDelete, setPendingDelete] = React.useState<Driver | null>(null)
+  const [deleting, setDeleting] = React.useState(false)
   const [form, setForm] = React.useState<FormState>(emptyForm)
   const [statusFilter, setStatusFilter] = React.useState("ALL")
   const [search, setSearch] = React.useState("")
@@ -252,19 +255,20 @@ function DriversRegistryPage() {
     }
   }
 
-  async function handleDelete(driver: Driver) {
-    const confirmed = window.confirm(
-      `Delete ${driver.first_name} ${driver.last_name}? Expired or suspended drivers stay blocked from trips.`
-    )
-    if (!confirmed) return
+  async function handleDelete() {
+    if (!pendingDelete) return
+    setDeleting(true)
     try {
-      await deleteDriver(driver.id)
+      await deleteDriver(pendingDelete.id)
       toast.success("Driver deleted")
+      setPendingDelete(null)
       await loadDrivers()
     } catch (error) {
       const message =
         error instanceof ApiError ? error.message : "Failed to delete driver"
       toast.error(message)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -438,7 +442,7 @@ function DriversRegistryPage() {
                           <Button
                             variant="ghost"
                             size="icon-sm"
-                            onClick={() => void handleDelete(driver)}
+                            onClick={() => setPendingDelete(driver)}
                             aria-label={`Delete ${driver.first_name}`}
                           >
                             <Trash2Icon className="text-destructive" />
@@ -484,7 +488,7 @@ function DriversRegistryPage() {
           >
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
-                <Label htmlFor="first_name">First name</Label>
+                <FieldLabel htmlFor="first_name">First name</FieldLabel>
                 <Input
                   id="first_name"
                   required
@@ -493,7 +497,7 @@ function DriversRegistryPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="last_name">Last name</Label>
+                <FieldLabel htmlFor="last_name">Last name</FieldLabel>
                 <Input
                   id="last_name"
                   required
@@ -503,7 +507,7 @@ function DriversRegistryPage() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="license_number">License no.</Label>
+              <FieldLabel htmlFor="license_number">License no.</FieldLabel>
               <Input
                 id="license_number"
                 required
@@ -514,7 +518,12 @@ function DriversRegistryPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
-                <Label htmlFor="license_category">Category</Label>
+                <FieldLabel
+                  htmlFor="license_category"
+                  tooltip="LMV = light vehicles, HMV = heavy. Controls which vehicles this driver can be assigned."
+                >
+                  Category
+                </FieldLabel>
                 <Select
                   value={form.license_category}
                   onValueChange={(value) =>
@@ -537,7 +546,12 @@ function DriversRegistryPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="license_expiry">Expiry</Label>
+                <FieldLabel
+                  htmlFor="license_expiry"
+                  tooltip="Expired licenses block this driver from trip assignment."
+                >
+                  Expiry
+                </FieldLabel>
                 <Input
                   id="license_expiry"
                   type="date"
@@ -549,7 +563,7 @@ function DriversRegistryPage() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="contact_number">Contact</Label>
+              <FieldLabel htmlFor="contact_number">Contact</FieldLabel>
               <Input
                 id="contact_number"
                 value={form.contact_number}
@@ -559,7 +573,12 @@ function DriversRegistryPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
-                <Label htmlFor="safety_score">Safety score</Label>
+                <FieldLabel
+                  htmlFor="safety_score"
+                  tooltip="0–100 score used by Safety Officers. Below 85 may be flagged as a violation."
+                >
+                  Safety score
+                </FieldLabel>
                 <Input
                   id="safety_score"
                   type="number"
@@ -570,7 +589,12 @@ function DriversRegistryPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="trip_completion_pct">Trip compl. %</Label>
+                <FieldLabel
+                  htmlFor="trip_completion_pct"
+                  tooltip="% of assigned trips this driver has completed successfully."
+                >
+                  Trip compl. %
+                </FieldLabel>
                 <Input
                   id="trip_completion_pct"
                   type="number"
@@ -585,7 +609,12 @@ function DriversRegistryPage() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="status">Status</Label>
+              <FieldLabel
+                htmlFor="status"
+                tooltip="Suspended drivers cannot be assigned to trips."
+              >
+                Status
+              </FieldLabel>
               <Select
                 value={form.status}
                 onValueChange={(value) =>
@@ -629,6 +658,28 @@ function DriversRegistryPage() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      <ConfirmActionDialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null)
+        }}
+        title="Delete driver?"
+        description={
+          pendingDelete ? (
+            <>
+              Delete{" "}
+              <span className="font-semibold text-foreground">
+                {pendingDelete.first_name} {pendingDelete.last_name}
+              </span>
+              ? Expired or suspended drivers stay blocked from trips.
+            </>
+          ) : null
+        }
+        confirmLabel="Delete driver"
+        pending={deleting}
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }

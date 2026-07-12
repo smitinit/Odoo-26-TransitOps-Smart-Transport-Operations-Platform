@@ -425,3 +425,18 @@ class AnalyticsOverview(BaseModel):
     driver: Optional[DriverAnalyticsData] = None
     safety: Optional[SafetyAnalyticsData] = None
     finance: Optional[FinanceAnalyticsData] = None
+
+
+# ============================================================
+# SETTINGS — Organization preferences
+# ============================================================
+class GeneralSettings(BaseModel):
+    depot_name: str = "Gandhinagar Depot GJ4"
+    currency: str = "INR (Rs)"
+    distance_unit: str = "Kilometers"
+
+
+class GeneralSettingsUpdate(BaseModel):
+    depot_name: Optional[str] = None
+    currency: Optional[str] = None
+    distance_unit: Optional[str] = None

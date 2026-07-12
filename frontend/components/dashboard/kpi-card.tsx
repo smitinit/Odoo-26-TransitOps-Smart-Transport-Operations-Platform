@@ -1,5 +1,25 @@
 "use client"
 
+import type { LucideIcon } from "lucide-react"
+import {
+  AlertTriangleIcon,
+  BanIcon,
+  CalendarClockIcon,
+  CheckCircle2Icon,
+  CircleDollarSignIcon,
+  FuelIcon,
+  GaugeIcon,
+  IdCardIcon,
+  LayoutDashboardIcon,
+  MapPinIcon,
+  RouteIcon,
+  ShieldCheckIcon,
+  TrendingUpIcon,
+  TruckIcon,
+  UsersIcon,
+  WrenchIcon,
+} from "lucide-react"
+
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Tooltip,
@@ -61,21 +81,181 @@ const DEFAULT_DESCRIPTIONS: Record<string, string> = {
     "Fuel spend logged for your vehicles today.",
 }
 
+const KPI_ICONS: Record<
+  string,
+  { icon: LucideIcon; color: string; hoverBg: string }
+> = {
+  "Active Vehicles": {
+    icon: TruckIcon,
+    color: "text-sky-600 dark:text-sky-400",
+    hoverBg: "hover:bg-sky-500/20 dark:hover:bg-sky-400/20",
+  },
+  "Available Vehicles": {
+    icon: CheckCircle2Icon,
+    color: "text-emerald-600 dark:text-emerald-400",
+    hoverBg: "hover:bg-emerald-500/20 dark:hover:bg-emerald-400/20",
+  },
+  "Vehicles In Shop": {
+    icon: WrenchIcon,
+    color: "text-amber-600 dark:text-amber-400",
+    hoverBg: "hover:bg-amber-500/20 dark:hover:bg-amber-400/20",
+  },
+  "Retired Vehicles": {
+    icon: BanIcon,
+    color: "text-rose-600 dark:text-rose-400",
+    hoverBg: "hover:bg-rose-500/20 dark:hover:bg-rose-400/20",
+  },
+  "Drivers On Duty": {
+    icon: UsersIcon,
+    color: "text-blue-600 dark:text-blue-400",
+    hoverBg: "hover:bg-blue-500/20 dark:hover:bg-blue-400/20",
+  },
+  "Active Trips": {
+    icon: RouteIcon,
+    color: "text-violet-600 dark:text-violet-400",
+    hoverBg: "hover:bg-violet-500/20 dark:hover:bg-violet-400/20",
+  },
+  "Pending Trips": {
+    icon: CalendarClockIcon,
+    color: "text-orange-600 dark:text-orange-400",
+    hoverBg: "hover:bg-orange-500/20 dark:hover:bg-orange-400/20",
+  },
+  "Fleet Utilization %": {
+    icon: GaugeIcon,
+    color: "text-cyan-600 dark:text-cyan-400",
+    hoverBg: "hover:bg-cyan-500/20 dark:hover:bg-cyan-400/20",
+  },
+  "Expired Licenses": {
+    icon: IdCardIcon,
+    color: "text-rose-600 dark:text-rose-400",
+    hoverBg: "hover:bg-rose-500/20 dark:hover:bg-rose-400/20",
+  },
+  "Licenses Expiring Soon": {
+    icon: CalendarClockIcon,
+    color: "text-amber-600 dark:text-amber-400",
+    hoverBg: "hover:bg-amber-500/20 dark:hover:bg-amber-400/20",
+  },
+  "Suspended Drivers": {
+    icon: BanIcon,
+    color: "text-rose-600 dark:text-rose-400",
+    hoverBg: "hover:bg-rose-500/20 dark:hover:bg-rose-400/20",
+  },
+  "Drivers On Trip": {
+    icon: RouteIcon,
+    color: "text-violet-600 dark:text-violet-400",
+    hoverBg: "hover:bg-violet-500/20 dark:hover:bg-violet-400/20",
+  },
+  "Average Safety Score": {
+    icon: ShieldCheckIcon,
+    color: "text-emerald-600 dark:text-emerald-400",
+    hoverBg: "hover:bg-emerald-500/20 dark:hover:bg-emerald-400/20",
+  },
+  "Average Driver Rating": {
+    icon: ShieldCheckIcon,
+    color: "text-emerald-600 dark:text-emerald-400",
+    hoverBg: "hover:bg-emerald-500/20 dark:hover:bg-emerald-400/20",
+  },
+  "Violations (score < 85)": {
+    icon: AlertTriangleIcon,
+    color: "text-amber-600 dark:text-amber-400",
+    hoverBg: "hover:bg-amber-500/20 dark:hover:bg-amber-400/20",
+  },
+  "Total Fuel Cost": {
+    icon: FuelIcon,
+    color: "text-orange-600 dark:text-orange-400",
+    hoverBg: "hover:bg-orange-500/20 dark:hover:bg-orange-400/20",
+  },
+  "Total Maintenance Cost": {
+    icon: WrenchIcon,
+    color: "text-amber-600 dark:text-amber-400",
+    hoverBg: "hover:bg-amber-500/20 dark:hover:bg-amber-400/20",
+  },
+  "Operational Cost": {
+    icon: CircleDollarSignIcon,
+    color: "text-slate-600 dark:text-slate-300",
+    hoverBg: "hover:bg-slate-500/20 dark:hover:bg-slate-400/20",
+  },
+  "Average Cost Per Vehicle": {
+    icon: CircleDollarSignIcon,
+    color: "text-slate-600 dark:text-slate-300",
+    hoverBg: "hover:bg-slate-500/20 dark:hover:bg-slate-400/20",
+  },
+  "Fleet ROI": {
+    icon: TrendingUpIcon,
+    color: "text-emerald-600 dark:text-emerald-400",
+    hoverBg: "hover:bg-emerald-500/20 dark:hover:bg-emerald-400/20",
+  },
+  "Monthly Expenses": {
+    icon: CircleDollarSignIcon,
+    color: "text-indigo-600 dark:text-indigo-400",
+    hoverBg: "hover:bg-indigo-500/20 dark:hover:bg-indigo-400/20",
+  },
+  "Trips Completed": {
+    icon: CheckCircle2Icon,
+    color: "text-emerald-600 dark:text-emerald-400",
+    hoverBg: "hover:bg-emerald-500/20 dark:hover:bg-emerald-400/20",
+  },
+  "Distance Travelled": {
+    icon: MapPinIcon,
+    color: "text-sky-600 dark:text-sky-400",
+    hoverBg: "hover:bg-sky-500/20 dark:hover:bg-sky-400/20",
+  },
+  "Fuel Consumption": {
+    icon: FuelIcon,
+    color: "text-orange-600 dark:text-orange-400",
+    hoverBg: "hover:bg-orange-500/20 dark:hover:bg-orange-400/20",
+  },
+  "Avg Fuel Efficiency": {
+    icon: GaugeIcon,
+    color: "text-cyan-600 dark:text-cyan-400",
+    hoverBg: "hover:bg-cyan-500/20 dark:hover:bg-cyan-400/20",
+  },
+  "Fuel Cost Today": {
+    icon: FuelIcon,
+    color: "text-orange-600 dark:text-orange-400",
+    hoverBg: "hover:bg-orange-500/20 dark:hover:bg-orange-400/20",
+  },
+}
+
+function resolveIcon(
+  label: string,
+  IconProp?: LucideIcon
+): { icon: LucideIcon; color: string; hoverBg: string } {
+  const entry = KPI_ICONS[label]
+  if (IconProp) {
+    return {
+      icon: IconProp,
+      color: entry?.color ?? "text-muted-foreground",
+      hoverBg: entry?.hoverBg ?? "hover:bg-muted-foreground/20",
+    }
+  }
+  return (
+    entry ?? {
+      icon: LayoutDashboardIcon,
+      color: "text-muted-foreground",
+      hoverBg: "hover:bg-muted-foreground/20",
+    }
+  )
+}
+
 export function KpiCard({
   label,
   value,
   hint,
   description,
+  icon,
   className,
 }: {
   label: string
   value: string | number
   hint?: string
   description?: string
+  icon?: LucideIcon
   className?: string
 }) {
   const tooltipText =
     description ?? DEFAULT_DESCRIPTIONS[label] ?? hint ?? `${label}: ${value}`
+  const { icon: Icon, color, hoverBg } = resolveIcon(label, icon)
 
   return (
     <TooltipProvider delay={200}>
@@ -84,13 +264,20 @@ export function KpiCard({
           render={
             <Card
               className={cn(
-                "@container/card border bg-card shadow-none transition-shadow hover:shadow-sm",
+                "@container/card group border bg-card shadow-none",
+                "transition-[background-color,border-color] duration-300 ease-in-out",
+                "hover:border-transparent",
+                hoverBg,
                 className
               )}
             />
           }
         >
-          <CardHeader>
+          <CardHeader className="relative gap-1 pr-10">
+            <Icon
+              className={cn("absolute top-4 right-4 size-5", color)}
+              aria-hidden
+            />
             <CardDescription>{label}</CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[220px]/card:text-3xl">
               {value}

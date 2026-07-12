@@ -6,10 +6,11 @@ import { PlusIcon, PencilIcon, Trash2Icon } from "lucide-react"
 
 import { PermissionGuard } from "@/components/auth/permission-guard"
 import { useAuth } from "@/components/auth/auth-provider"
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { FieldLabel } from "@/components/form-field-label"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -122,6 +123,8 @@ function FleetRegistryPage() {
   const [saving, setSaving] = React.useState(false)
   const [sheetOpen, setSheetOpen] = React.useState(false)
   const [editing, setEditing] = React.useState<Vehicle | null>(null)
+  const [pendingDelete, setPendingDelete] = React.useState<Vehicle | null>(null)
+  const [deleting, setDeleting] = React.useState(false)
   const [form, setForm] = React.useState<FormState>(emptyForm)
   const [typeFilter, setTypeFilter] = React.useState("ALL")
   const [statusFilter, setStatusFilter] = React.useState("ALL")
@@ -234,19 +237,20 @@ function FleetRegistryPage() {
     }
   }
 
-  async function handleDelete(vehicle: Vehicle) {
-    const confirmed = window.confirm(
-      `Delete ${vehicle.license_plate}? Registration numbers must stay unique.`
-    )
-    if (!confirmed) return
+  async function handleDelete() {
+    if (!pendingDelete) return
+    setDeleting(true)
     try {
-      await deleteVehicle(vehicle.id)
+      await deleteVehicle(pendingDelete.id)
       toast.success("Vehicle deleted")
+      setPendingDelete(null)
       await loadVehicles()
     } catch (error) {
       const message =
         error instanceof ApiError ? error.message : "Failed to delete vehicle"
       toast.error(message)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -387,7 +391,7 @@ function FleetRegistryPage() {
                           <Button
                             variant="ghost"
                             size="icon-sm"
-                            onClick={() => void handleDelete(vehicle)}
+                            onClick={() => setPendingDelete(vehicle)}
                             aria-label={`Delete ${vehicle.license_plate}`}
                           >
                             <Trash2Icon className="text-destructive" />
@@ -420,7 +424,7 @@ function FleetRegistryPage() {
             onSubmit={(event) => void handleSubmit(event)}
           >
             <div className="grid gap-2">
-              <Label htmlFor="license_plate">Registration no.</Label>
+              <FieldLabel htmlFor="license_plate">Registration no.</FieldLabel>
               <Input
                 id="license_plate"
                 required
@@ -430,7 +434,7 @@ function FleetRegistryPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="model">Name / Model</Label>
+              <FieldLabel htmlFor="model">Name / Model</FieldLabel>
               <Input
                 id="model"
                 required
@@ -440,7 +444,7 @@ function FleetRegistryPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="make">Make</Label>
+              <FieldLabel htmlFor="make">Make</FieldLabel>
               <Input
                 id="make"
                 required
@@ -450,7 +454,12 @@ function FleetRegistryPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="vin">VIN</Label>
+              <FieldLabel
+                htmlFor="vin"
+                tooltip="Vehicle Identification Number — the unique chassis ID stamped on the vehicle."
+              >
+                VIN
+              </FieldLabel>
               <Input
                 id="vin"
                 required
@@ -460,7 +469,7 @@ function FleetRegistryPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
-                <Label htmlFor="year">Year</Label>
+                <FieldLabel htmlFor="year">Year</FieldLabel>
                 <Input
                   id="year"
                   type="number"
@@ -470,7 +479,7 @@ function FleetRegistryPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="vehicle_type">Type</Label>
+                <FieldLabel htmlFor="vehicle_type">Type</FieldLabel>
                 <Select
                   value={form.vehicle_type}
                   onValueChange={(value) =>
@@ -494,7 +503,12 @@ function FleetRegistryPage() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="capacity">Capacity</Label>
+              <FieldLabel
+                htmlFor="capacity"
+                tooltip="Max load (e.g. 500 kg or 2 ton). Trip cargo weight cannot exceed this."
+              >
+                Capacity
+              </FieldLabel>
               <Input
                 id="capacity"
                 value={form.capacity}
@@ -504,7 +518,7 @@ function FleetRegistryPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
-                <Label htmlFor="odometer">Odometer</Label>
+                <FieldLabel htmlFor="odometer">Odometer</FieldLabel>
                 <Input
                   id="odometer"
                   type="number"
@@ -514,7 +528,12 @@ function FleetRegistryPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="acquisition_cost">Acq. cost</Label>
+                <FieldLabel
+                  htmlFor="acquisition_cost"
+                  tooltip="Purchase price of the vehicle. Used when calculating fleet ROI."
+                >
+                  Acq. cost
+                </FieldLabel>
                 <Input
                   id="acquisition_cost"
                   type="number"
@@ -528,7 +547,12 @@ function FleetRegistryPage() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="status">Status</Label>
+              <FieldLabel
+                htmlFor="status"
+                tooltip="In Shop and Retired vehicles are hidden from trip assignment."
+              >
+                Status
+              </FieldLabel>
               <Select
                 value={form.status}
                 onValueChange={(value) =>
@@ -569,6 +593,28 @@ function FleetRegistryPage() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      <ConfirmActionDialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null)
+        }}
+        title="Delete vehicle?"
+        description={
+          pendingDelete ? (
+            <>
+              Delete{" "}
+              <span className="font-semibold text-foreground">
+                {pendingDelete.license_plate}
+              </span>
+              ? Registration numbers must stay unique.
+            </>
+          ) : null
+        }
+        confirmLabel="Delete vehicle"
+        pending={deleting}
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }

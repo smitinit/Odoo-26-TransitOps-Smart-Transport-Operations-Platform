@@ -2,9 +2,13 @@
 TransitOps — All business module CRUD routers.
 Hackathon-speed: one file, all endpoints.
 """
+from datetime import date as date_cls
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from sqlalchemy.exc import IntegrityError
 from uuid import UUID
 
 from app.database.session import get_db
@@ -21,9 +25,9 @@ from app.modules.users.service import user_service
 from app.core.security import get_password_hash
 
 # Models
+from app.shared.base.model import SoftDeleteMixin
 from app.modules.fleet.models import Vehicle, VehicleStatus
 from app.modules.drivers.models import Driver, DriverStatus
-from datetime import date as date_cls
 from app.modules.trips.models import Trip, TripStatus
 from app.modules.trips.rules import (
     assert_cargo_fits,
@@ -43,10 +47,14 @@ from app.api.v1.schemas import (
     ExpenseCreate, ExpenseUpdate, ExpenseResponse,
     FuelLogCreate, FuelLogUpdate, FuelLogResponse,
     RoleResponse, DashboardStats, OpsCostSummary, DashboardOverview,
-    AnalyticsOverview,
+    AnalyticsOverview, GeneralSettings, GeneralSettingsUpdate,
 )
 from app.api.v1.dashboard_service import build_dashboard_overview
 from app.api.v1.analytics_service import build_analytics_overview
+from app.modules.settings.models import Setting
+
+GENERAL_SETTINGS_KEY = "general"
+DEFAULT_GENERAL_SETTINGS = GeneralSettings()
 
 router = APIRouter()
 
@@ -56,7 +64,9 @@ router = APIRouter()
 async def _get_or_404(db: AsyncSession, model, id: UUID):
     result = await db.execute(select(model).where(model.id == id))
     obj = result.scalar_one_or_none()
-    if not obj:
+    if not obj or (
+        isinstance(obj, SoftDeleteMixin) and obj.deleted_at is not None
+    ):
         raise NotFoundException(message=f"{model.__name__} with id {id} not found")
     return obj
 
@@ -85,8 +95,27 @@ async def _update(db: AsyncSession, obj, data: dict):
     return obj
 
 async def _delete(db: AsyncSession, obj):
-    await db.delete(obj)
-    await db.commit()
+    """Soft-delete when supported; otherwise hard-delete with FK-safe error handling.
+
+    Vehicles/drivers use SoftDeleteMixin so related trips (RESTRICT FKs) stay valid.
+    """
+    try:
+        if isinstance(obj, SoftDeleteMixin):
+            obj.deleted_at = datetime.now(timezone.utc)
+            db.add(obj)
+        else:
+            await db.delete(obj)
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        raise AppException(
+            message=(
+                "Cannot delete: this record is still referenced by related data "
+                "(for example trips, fuel logs, or expenses). Remove or reassign "
+                "those records first."
+            ),
+            status_code=409,
+        ) from exc
 
 
 # ============================================================
@@ -978,6 +1007,76 @@ async def get_analytics_overview(
 
 
 # ============================================================
+# SETTINGS — Organization preferences
+# ============================================================
+settings_router = APIRouter(prefix="/settings", tags=["Settings"])
+
+
+def _general_from_row(row: Setting | None) -> GeneralSettings:
+    if not row or not isinstance(row.value, dict):
+        return DEFAULT_GENERAL_SETTINGS.model_copy()
+    return GeneralSettings(
+        depot_name=str(row.value.get("depot_name") or DEFAULT_GENERAL_SETTINGS.depot_name),
+        currency=str(row.value.get("currency") or DEFAULT_GENERAL_SETTINGS.currency),
+        distance_unit=str(
+            row.value.get("distance_unit") or DEFAULT_GENERAL_SETTINGS.distance_unit
+        ),
+    )
+
+
+@settings_router.get("/general", response_model=SuccessResponse[GeneralSettings])
+async def get_general_settings(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission("settings.manage")),
+):
+    result = await db.execute(
+        select(Setting).where(Setting.key == GENERAL_SETTINGS_KEY)
+    )
+    row = result.scalar_one_or_none()
+    return SuccessResponse(
+        message="General settings retrieved",
+        data=_general_from_row(row),
+    )
+
+
+@settings_router.put("/general", response_model=SuccessResponse[GeneralSettings])
+async def update_general_settings(
+    body: GeneralSettingsUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission("settings.manage")),
+):
+    result = await db.execute(
+        select(Setting).where(Setting.key == GENERAL_SETTINGS_KEY)
+    )
+    row = result.scalar_one_or_none()
+    current = _general_from_row(row)
+    updates = body.model_dump(exclude_unset=True)
+    merged = current.model_copy(update=updates)
+
+    if not merged.depot_name.strip():
+        raise AppException(message="Depot name is required", status_code=400)
+
+    payload = merged.model_dump()
+    if row is None:
+        row = Setting(
+            key=GENERAL_SETTINGS_KEY,
+            value=payload,
+            description="Organization general preferences",
+        )
+        db.add(row)
+    else:
+        row.value = payload
+        db.add(row)
+
+    await db.commit()
+    await db.refresh(row)
+    return SuccessResponse(
+        message="General settings saved",
+        data=_general_from_row(row),
+    )
+
+
+# ============================================================
 # Wire all sub-routers into the main router
 # ============================================================
 router.include_router(users_router)
@@ -991,3 +1090,4 @@ router.include_router(fuel_router)
 router.include_router(finance_router)
 router.include_router(dashboard_router)
 router.include_router(analytics_router)
+router.include_router(settings_router)
