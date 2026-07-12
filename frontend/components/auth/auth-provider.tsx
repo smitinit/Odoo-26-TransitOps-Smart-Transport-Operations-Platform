@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 
 import * as authApi from "@/lib/api/auth"
 import { clearTokens, hasAccessToken } from "@/lib/api/tokens"
+import { userHasPermission } from "@/lib/auth/permissions"
 import type { User } from "@/lib/api/types"
 
 type AuthContextValue = {
@@ -14,6 +15,7 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
+  hasPermission: (permission: string) => boolean
 }
 
 const AuthContext = React.createContext<AuthContextValue | null>(null)
@@ -87,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login,
       logout,
       refreshUser,
+      hasPermission: (permission: string) => userHasPermission(user, permission),
     }),
     [user, isLoading, login, logout, refreshUser]
   )

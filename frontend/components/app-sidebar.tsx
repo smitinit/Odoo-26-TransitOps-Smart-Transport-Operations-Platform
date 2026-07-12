@@ -15,6 +15,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { NAV_PERMISSIONS, userHasPermission } from "@/lib/auth/permissions"
 import {
   LayoutDashboardIcon,
   TruckIcon,
@@ -28,7 +29,13 @@ import {
   UserCogIcon,
 } from "lucide-react"
 
-const navMain = [
+type NavItem = {
+  title: string
+  url: string
+  icon: React.ReactNode
+}
+
+const navMain: NavItem[] = [
   {
     title: "Dashboard",
     url: "/dashboard",
@@ -81,17 +88,38 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     email: user?.email ?? "",
   }
 
-  const items = user?.is_superuser
+  const items = [
+    ...(user?.is_superuser
+      ? [
+          {
+            title: "Users",
+            url: "/users",
+            icon: <UserCogIcon />,
+          } satisfies NavItem,
+        ]
+      : []),
+    ...navMain.filter((item) => {
+      const permission = NAV_PERMISSIONS[item.url]
+      if (!permission) return true
+      // Settings only for settings.manage; Analytics shares dashboard.view
+      if (item.url === "/fuel-expenses") {
+        return (
+          userHasPermission(user, "fuel.read") ||
+          userHasPermission(user, "expense.read")
+        )
+      }
+      return userHasPermission(user, permission)
+    }),
+  ]
+
+  // Keep Users after Dashboard when superuser
+  const orderedItems = user?.is_superuser
     ? [
-        ...navMain.slice(0, 1),
-        {
-          title: "Users",
-          url: "/users",
-          icon: <UserCogIcon />,
-        },
-        ...navMain.slice(1),
+        ...items.filter((i) => i.url === "/dashboard"),
+        ...items.filter((i) => i.url === "/users"),
+        ...items.filter((i) => i.url !== "/dashboard" && i.url !== "/users"),
       ]
-    : navMain
+    : items
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -109,7 +137,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={items} />
+        <NavMain items={orderedItems} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={displayUser} />

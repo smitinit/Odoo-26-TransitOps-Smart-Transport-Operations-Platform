@@ -1,14 +1,16 @@
 from uuid import UUID
 from datetime import date
-from sqlalchemy import String, ForeignKey, Enum, Date
+from decimal import Decimal
+from sqlalchemy import String, ForeignKey, Enum, Date, Integer, Numeric
 from sqlalchemy.orm import Mapped, mapped_column
 from app.shared.base.model import BaseModel, SoftDeleteMixin
 import enum
 
 class VehicleStatus(str, enum.Enum):
-    ACTIVE = "ACTIVE"
-    INACTIVE = "INACTIVE"
-    MAINTENANCE = "MAINTENANCE"
+    ACTIVE = "ACTIVE"          # Available
+    ON_TRIP = "ON_TRIP"        # On Trip
+    MAINTENANCE = "MAINTENANCE"  # In Shop
+    INACTIVE = "INACTIVE"      # Retired
 
 class Vehicle(BaseModel, SoftDeleteMixin):
     __tablename__ = "vehicles"
@@ -18,6 +20,10 @@ class Vehicle(BaseModel, SoftDeleteMixin):
     make: Mapped[str] = mapped_column(String(50), nullable=False)
     model: Mapped[str] = mapped_column(String(50), nullable=False)
     year: Mapped[int] = mapped_column(nullable=False)
+    vehicle_type: Mapped[str] = mapped_column(String(50), nullable=False, default="Van")
+    capacity: Mapped[str] = mapped_column(String(50), nullable=False, default="")
+    odometer: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    acquisition_cost: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
     status: Mapped[VehicleStatus] = mapped_column(Enum(VehicleStatus), default=VehicleStatus.ACTIVE)
 
 class VehicleDocument(BaseModel):

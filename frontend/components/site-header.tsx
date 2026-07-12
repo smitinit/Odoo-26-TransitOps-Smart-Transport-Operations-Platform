@@ -3,21 +3,23 @@
 import { SearchIcon } from "lucide-react"
 import { usePathname } from "next/navigation"
 
+import { ModeToggle } from "@/components/mode-toggle"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
 const titles: Record<string, string> = {
   "/dashboard": "Dashboard",
-  "/fleet": "Fleet",
-  "/drivers": "Drivers",
-  "/trips": "Trips",
+  "/drivers": "Drivers & Safety",
+  "/fleet": "Vehicle Registry",
+  "/trips": "Trip Dispatcher",
   "/maintenance": "Maintenance",
   "/fuel-expenses": "Fuel & Expenses",
   "/analytics": "Analytics",
   "/settings": "Settings",
   "/account": "Account",
   "/notifications": "Notifications",
+  "/users": "Users",
 }
 
 export function SiteHeader() {
@@ -33,7 +35,7 @@ export function SiteHeader() {
           className="mx-2 h-4 data-vertical:self-auto"
         />
         <h1 className="text-base font-medium">{title}</h1>
-        <div className="ml-auto flex items-center">
+        <div className="ml-auto flex items-center gap-2">
           <div className="relative w-48 sm:w-64">
             <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -43,6 +45,7 @@ export function SiteHeader() {
               aria-label="Search"
             />
           </div>
+          <ModeToggle />
         </div>
       </div>
     </header>

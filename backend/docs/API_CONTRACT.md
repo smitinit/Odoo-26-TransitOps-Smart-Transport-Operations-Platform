@@ -198,21 +198,25 @@ The following permissions are currently seeded in the database. Superusers (`is_
 | Permission | Description | Assigned Roles |
 | :--- | :--- | :--- |
 | `vehicle.create` | Create vehicles | Admin, Fleet Manager |
-| `vehicle.read` | Read vehicles | Admin, Fleet Manager, Dispatcher, Safety Officer, Financial Analyst |
+| `vehicle.read` | Read vehicles | Admin, Fleet Manager, Driver, Safety Officer, Financial Analyst |
 | `vehicle.update` | Update vehicles | Admin, Fleet Manager |
 | `vehicle.delete` | Delete vehicles | Admin, Fleet Manager |
-| `driver.create` | Create drivers | Admin, Fleet Manager |
-| `driver.read` | Read drivers | Admin, Fleet Manager, Dispatcher, Safety Officer |
-| `driver.update` | Update drivers | Admin, Fleet Manager |
-| `driver.delete` | Delete drivers | Admin, Fleet Manager |
-| `trip.create` | Create trips | Admin, Dispatcher |
-| `trip.dispatch` | Dispatch trips | Admin, Dispatcher |
-| `trip.complete` | Complete trips | Admin, Dispatcher |
-| `trip.cancel` | Cancel trips | Admin, Dispatcher |
+| `driver.create` | Create drivers | Admin, Fleet Manager, Safety Officer |
+| `driver.read` | Read drivers | Admin, Fleet Manager, Driver, Safety Officer, Financial Analyst |
+| `driver.update` | Update drivers | Admin, Fleet Manager, Safety Officer |
+| `driver.delete` | Delete drivers | Admin, Fleet Manager, Safety Officer |
+| `trip.create` | Create trips | Admin, Fleet Manager, Driver |
+| `trip.read` | Read trips | Admin, Fleet Manager, Driver, Safety Officer, Financial Analyst |
+| `trip.dispatch` | Assign/dispatch trips | Admin, Fleet Manager, Driver |
+| `trip.complete` | Complete trips | Admin, Driver |
+| `trip.cancel` | Cancel trips | Admin, Fleet Manager, Driver |
 | `maintenance.create`| Schedule maintenance | Admin, Fleet Manager |
+| `maintenance.read` | Read maintenance | Admin, Fleet Manager, Driver, Safety Officer, Financial Analyst |
 | `maintenance.update`| Update maintenance | Admin, Fleet Manager |
-| `fuel.create` | Log fuel | Admin, Fleet Manager, Financial Analyst |
-| `expense.create` | Log expenses | Admin, Financial Analyst |
+| `fuel.create` | Log / manage fuel | Admin, Fleet Manager, Driver |
+| `fuel.read` | Read fuel logs | Admin, Fleet Manager, Driver, Safety Officer, Financial Analyst |
+| `expense.create` | Log expenses (fuel/tolls/misc) | Admin, Fleet Manager, Driver |
+| `expense.read` | Read expenses | Admin, Fleet Manager, Driver, Safety Officer, Financial Analyst |
 | `dashboard.view` | View dashboard | All Roles |
 | `notification.read`| Read notifications | All Roles |
 | `settings.manage` | Manage settings | Admin |

@@ -5,7 +5,7 @@ TransitOps utilizes a robust, database-driven RBAC system.
 ## Core Concepts
 
 - **Users:** The individuals logging into the system. A user has exactly one `Role`.
-- **Roles:** A grouping of permissions (e.g., "Admin", "Dispatcher", "Driver").
+- **Roles:** A grouping of permissions (e.g., "Admin", "Fleet Manager", "Driver").
 - **Permissions:** Granular actions represented as strings (e.g., `vehicle.create`, `trip.dispatch`).
 - **RolePermissions:** The mapping table linking Roles to Permissions.
 
@@ -45,6 +45,17 @@ async def create_vehicle(
 
 ## Seeded Roles & Permissions
 
-The `scripts/seed_roles.py` script automatically seeds:
-- **Roles:** Admin, Fleet Manager, Dispatcher, Safety Officer, Financial Analyst.
-- **Permissions:** Module specific permissions (`vehicle.create`, `trip.dispatch`, etc.) mapped accordingly.
+Aligned to the product RBAC matrix. `scripts/seed_roles.py` syncs (adds + revokes) so DB matches.
+
+| Role | Intent | Write access highlights | Demo login |
+| :--- | :--- | :--- | :--- |
+| **Admin** | Full access (`is_superuser`) | All permissions | `admin@transitops.com` / `Admin@123` |
+| **Fleet Manager** | Fleet assets & maintenance; cost log ownership | Vehicle/driver/maint CRUD; fuel & expense CRUD; trip create/dispatch/cancel (**not** complete) | `fleet@transitops.com` / `Fleet@123` |
+| **Driver** | Trip ops: create, assign, dispatch, complete | Trip CRUD + complete; fuel & expense write; registries read-only | `driver@transitops.com` / `Driver@123` (also `dispatch@…`) |
+| **Safety Officer** | Driver compliance & licenses | Driver CRUD (incl. suspend/restore); read elsewhere | `safety@transitops.com` / `Safety@123` |
+| **Financial Analyst** | Cost & profitability review | **Read-only** (fuel, expense, maintenance, fleet, trips) | `finance@transitops.com` / `Finance@123` |
+
+Notes:
+- “Enter Fuel Consumed” / trip completion are **Driver** writes; Fleet Manager manages **Fuel Logs** as a registry (CRUD) but does not get `trip.complete`.
+- Safety Officer and Financial Analyst can **view** Fuel & Expenses; only Fleet Manager and Driver can create logs.
+

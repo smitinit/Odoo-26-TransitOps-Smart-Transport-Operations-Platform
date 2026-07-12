@@ -61,7 +61,13 @@ async def main():
 
         # 9. Create driver
         r = await c.post(f"{BASE}/drivers", headers=h, json={
-            "user_id": driver_user_id, "license_number": f"MH-LIC-{TS}"
+            "user_id": driver_user_id,
+            "first_name": "Rahul",
+            "last_name": "Sharma",
+            "license_number": f"MH-LIC-{TS}",
+            "license_category": "LMV",
+            "contact_number": "9876500000",
+            "status": "AVAILABLE",
         })
         assert r.status_code == 201, f"Create driver failed: {r.text}"
         driver_id = r.json()["data"]["id"]
@@ -76,7 +82,10 @@ async def main():
         r = await c.post(f"{BASE}/trips", headers=h, json={
             "vehicle_id": vehicle_id, "driver_id": driver_id,
             "origin": "Mumbai", "destination": "Pune",
-            "start_time": "2026-07-12T10:00:00+05:30"
+            "start_time": "2026-07-12T10:00:00+05:30",
+            "load_type": "Parcels",
+            "cargo_weight_kg": 200,
+            "planned_distance_km": 150,
         })
         assert r.status_code == 201, f"Create trip failed: {r.text}"
         trip_id = r.json()["data"]["id"]
@@ -89,8 +98,11 @@ async def main():
 
         # 13. Create maintenance
         r = await c.post(f"{BASE}/maintenance", headers=h, json={
-            "vehicle_id": vehicle_id, "description": "Oil change",
-            "scheduled_date": "2026-07-15", "cost": 2500.00
+            "vehicle_id": vehicle_id,
+            "maintenance_type": "Oil Change",
+            "description": "Oil change",
+            "scheduled_date": "2026-07-15",
+            "cost": 2500.00,
         })
         assert r.status_code == 201, f"Create maintenance failed: {r.text}"
         print(f"[PASS] POST /maintenance -- created")
@@ -106,7 +118,7 @@ async def main():
 
         # 15. Create fuel log
         r = await c.post(f"{BASE}/fuel-logs", headers=h, json={
-            "vehicle_id": vehicle_id, "gallons": 15.5,
+            "vehicle_id": vehicle_id, "liters": 15.5,
             "cost": 1800.00, "date_filled": "2026-07-12"
         })
         assert r.status_code == 201, f"Create fuel log failed: {r.text}"
