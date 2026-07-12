@@ -167,6 +167,7 @@ async def _ensure_demo_user(
     last_name: str,
     role: Role,
     label: str,
+    reset_password: bool = False,
 ):
     result = await session.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
@@ -186,7 +187,16 @@ async def _ensure_demo_user(
     else:
         user.role_id = role.id
         user.is_superuser = False
-        print(f"Updated existing {email} role to {label}.")
+        user.is_active = True
+        user.first_name = first_name
+        user.last_name = last_name
+        if reset_password:
+            user.hashed_password = get_password_hash(password)
+        print(
+            f"Updated existing {email} → {label}"
+            + (f" (password reset to {password})" if reset_password else "")
+            + "."
+        )
 
 
 async def seed_data():
@@ -314,37 +324,103 @@ async def seed_data():
             label="Financial Analyst",
         )
 
+        # Presentation / prod demo logins (skip admin) — shared password role@123
+        await _ensure_demo_user(
+            session,
+            email="fleet-prod@transitops.com",
+            password="role@123",
+            first_name="Meera",
+            last_name="Desai",
+            role=roles["Fleet Manager"],
+            label="Fleet Manager (prod)",
+            reset_password=True,
+        )
+        await _ensure_demo_user(
+            session,
+            email="driver-prod@transitops.com",
+            password="role@123",
+            first_name="Arjun",
+            last_name="Patel",
+            role=roles["Driver"],
+            label="Driver (prod)",
+            reset_password=True,
+        )
+        await _ensure_demo_user(
+            session,
+            email="safety-prod@transitops.com",
+            password="role@123",
+            first_name="Neha",
+            last_name="Iyer",
+            role=roles["Safety Officer"],
+            label="Safety Officer (prod)",
+            reset_password=True,
+        )
+        await _ensure_demo_user(
+            session,
+            email="finance-prod@transitops.com",
+            password="role@123",
+            first_name="Kabir",
+            last_name="Singh",
+            role=roles["Financial Analyst"],
+            label="Financial Analyst (prod)",
+            reset_password=True,
+        )
+
         # Link Driver login users to a physical driver profile (for personal dashboard)
-        from app.modules.drivers.models import Driver
+        from app.modules.drivers.models import Driver, DriverStatus
 
         driver_user = (
-            await session.execute(select(User).where(User.email == "driver@transitops.com"))
-        ).scalar_one_or_none()
-        dispatch_user = (
-            await session.execute(select(User).where(User.email == "dispatch@transitops.com"))
-        ).scalar_one_or_none()
+            await session.execute(
+                select(User).where(
+                    User.email.in_(
+                        ["driver-prod@transitops.com", "driver@transitops.com"]
+                    )
+                )
+            )
+        ).scalars().all()
         # Prefer ON_TRIP profile so Driver dashboard shows an active trip
         profile = (
             await session.execute(
-                select(Driver).where(Driver.license_number == "DL-77031")  # Priya Nair
+                select(Driver).where(Driver.license_number == "DL-GJ-88421")
             )
         ).scalar_one_or_none()
+        if not profile:
+            profile = (
+                await session.execute(
+                    select(Driver).where(Driver.status == DriverStatus.ON_TRIP)
+                )
+            ).scalars().first()
         if not profile:
             profile = (
                 await session.execute(select(Driver).limit(1))
             ).scalar_one_or_none()
         if profile:
-            if driver_user:
-                profile.user_id = driver_user.id
-                print(f"Linked driver@transitops.com → {profile.first_name} {profile.last_name}.")
-            elif dispatch_user:
-                profile.user_id = dispatch_user.id
-                print(f"Linked dispatch@transitops.com → {profile.first_name} {profile.last_name}.")
+            for u in driver_user:
+                if u.email == "driver-prod@transitops.com":
+                    profile.user_id = u.id
+                    print(
+                        f"Linked {u.email} → {profile.first_name} {profile.last_name}."
+                    )
+                    break
+            else:
+                legacy = next(
+                    (u for u in driver_user if u.email == "driver@transitops.com"),
+                    None,
+                )
+                if legacy and not profile.user_id:
+                    profile.user_id = legacy.id
+                    print(
+                        f"Linked {legacy.email} → {profile.first_name} {profile.last_name}."
+                    )
 
         await session.commit()
         print(
             "Role permissions synced "
             "(Admin, Fleet Manager, Driver, Safety Officer, Financial Analyst)."
+        )
+        print(
+            "Prod demos: fleet-prod / driver-prod / safety-prod / finance-prod"
+            "@transitops.com — password role@123"
         )
 
 

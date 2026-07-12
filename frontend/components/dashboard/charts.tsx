@@ -56,7 +56,29 @@ export function ChartCard({
   )
 }
 
+function EmptyChart({ message = "No data for this period." }: { message?: string }) {
+  return (
+    <p className="flex h-[220px] items-center justify-center text-center text-sm text-muted-foreground">
+      {message}
+    </p>
+  )
+}
+
+function compactTick(value: number) {
+  if (Math.abs(value) >= 1_00_000) {
+    return `${(value / 1_00_000).toFixed(value % 1_00_000 === 0 ? 0 : 1)}L`
+  }
+  if (Math.abs(value) >= 1_000) {
+    return `${(value / 1_000).toFixed(value % 1_000 === 0 ? 0 : 1)}k`
+  }
+  return String(value)
+}
+
 export function StatusPieChart({ data }: { data: NamedCount[] }) {
+  if (!data.length || data.every((d) => d.value === 0)) {
+    return <EmptyChart />
+  }
+
   const config: ChartConfig = Object.fromEntries(
     data.map((d, i) => [
       d.name,
@@ -76,7 +98,15 @@ export function StatusPieChart({ data }: { data: NamedCount[] }) {
     >
       <PieChart>
         <ChartTooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
-        <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={50}>
+        <Pie
+          data={chartData}
+          dataKey="value"
+          nameKey="name"
+          innerRadius={52}
+          outerRadius={88}
+          paddingAngle={2}
+          strokeWidth={2}
+        >
           {chartData.map((entry) => (
             <Cell key={entry.name} fill={entry.fill} />
           ))}
@@ -96,6 +126,10 @@ export function NamedBarChart({
   data: NamedCount[]
   valueLabel?: string
 }) {
+  if (!data.length) {
+    return <EmptyChart />
+  }
+
   const chartData = data.map((d, i) => ({
     ...d,
     fill: barColor(i),
@@ -110,12 +144,24 @@ export function NamedBarChart({
 
   return (
     <ChartContainer config={config} className="aspect-auto h-[260px] w-full">
-      <BarChart data={chartData} margin={{ left: 8, right: 8, top: 8 }}>
-        <CartesianGrid vertical={false} />
-        <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
-        <YAxis tickLine={false} axisLine={false} width={40} />
+      <BarChart data={chartData} margin={{ left: 8, right: 8, top: 8, bottom: 4 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" />
+        <XAxis
+          dataKey="name"
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          interval={0}
+          tick={{ fontSize: 11 }}
+        />
+        <YAxis
+          tickLine={false}
+          axisLine={false}
+          width={44}
+          tickFormatter={compactTick}
+        />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar dataKey="value" name={valueLabel} radius={4}>
+        <Bar dataKey="value" name={valueLabel} radius={[4, 4, 0, 0]}>
           {chartData.map((entry) => (
             <Cell key={entry.name} fill={entry.fill} />
           ))}
@@ -143,23 +189,39 @@ export function TrendLineChart({
   data: TrendPoint[]
   valueLabel?: string
 }) {
+  if (!data.length) {
+    return <EmptyChart />
+  }
+
   const config: ChartConfig = {
     value: { label: valueLabel, color: "var(--chart-2)" },
   }
   return (
     <ChartContainer config={config} className="aspect-auto h-[260px] w-full">
-      <LineChart data={data} margin={{ left: 8, right: 8, top: 8 }}>
-        <CartesianGrid vertical={false} />
-        <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
-        <YAxis tickLine={false} axisLine={false} width={40} />
+      <LineChart data={data} margin={{ left: 8, right: 12, top: 8, bottom: 4 }}>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" />
+        <XAxis
+          dataKey="label"
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          tick={{ fontSize: 11 }}
+        />
+        <YAxis
+          tickLine={false}
+          axisLine={false}
+          width={44}
+          tickFormatter={compactTick}
+        />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
         <Line
           type="monotone"
           dataKey="value"
           stroke="var(--color-value)"
-          strokeWidth={2}
-          dot={false}
+          strokeWidth={2.5}
+          dot={{ r: 3, strokeWidth: 0 }}
+          activeDot={{ r: 5 }}
         />
       </LineChart>
     </ChartContainer>
