@@ -5,6 +5,7 @@ from app.shared.base.model import BaseModel
 from app.modules.audit.models import AuditLog
 from datetime import datetime
 from uuid import UUID
+from uuid_extensions import uuid7
 
 def default_serializer(obj):
     if isinstance(obj, UUID):
@@ -39,7 +40,7 @@ def _create_audit_log(mapper: Mapper, connection: Connection, target: BaseModel,
     # For now, it's left None or can be wired up via request context.
     connection.execute(
         AuditLog.__table__.insert().values(
-            id=target.id, # We would normally generate a new UUID for the audit log itself
+            id=uuid7(), # Generate a unique PK for each audit log entry
             action=action,
             table_name=target.__tablename__,
             record_id=str(target.id),

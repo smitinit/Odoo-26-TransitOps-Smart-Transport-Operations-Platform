@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TransitOps Dashboard</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Poppins,sans-serif;
+}
+
+body{
+background:#f4f7fb;
+display:flex;
+}
+
+/* =======================
+SIDEBAR
+======================= */
+
+.sidebar{
+
+width:260px;
+height:100vh;
+
+background:#111827;
+
+color:white;
+
+position:fixed;
+
+left:0;
+top:0;
+
+padding:25px;
+
+}
+
+.logo{
+
+display:flex;
+align-items:center;
+gap:12px;
+
+margin-bottom:40px;
+
+}
+
+.logo i{
+
+font-size:32px;
+color:#f59e0b;
+
+}
+
+.logo h2{
+
+font-size:28px;
+
+}
+
+.menu{
+
+list-style:none;
+
+}
+
+.menu li{
+
+padding:15px;
+
+margin-bottom:8px;
+
+border-radius:12px;
+
+cursor:pointer;
+
+transition:.3s;
+
+}
+
+.menu li:hover{
+
+background:#1f2937;
+
+}
+
+.menu li i{
+
+width:25px;
+
+}
+
+.active{
+
+background:#f59e0b;
+
+}
+
+/* =======================
+CONTENT
+======================= */
+
+.main{
+
+margin-left:260px;
+
+width:calc(100% - 260px);
+
+padding:25px;
+
+}
+
+/* NAVBAR */
+
+.navbar{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+margin-bottom:30px;
+
+}
+
+.search{
+
+background:white;
+
+width:420px;
+
+padding:12px 20px;
+
+border-radius:12px;
+
+display:flex;
+
+align-items:center;
+
+box-shadow:0 8px 20px rgba(0,0,0,.05);
+
+}
+
+.search input{
+
+border:none;
+
+outline:none;
+
+margin-left:10px;
+
+width:100%;
+
+font-size:15px;
+
+}
+
+.right{
+
+display:flex;
+
+align-items:center;
+
+gap:25px;
+
+}
+
+.bell{
+
+position:relative;
+
+font-size:22px;
+
+cursor:pointer;
+
+}
+
+.dot{
+
+width:10px;
+height:10px;
+
+background:red;
+
+border-radius:50%;
+
+position:absolute;
+
+top:0;
+right:0;
+
+}
+
+.profile{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+}
+
+.profile img{
+
+width:45px;
+height:45px;
+
+border-radius:50%;
+
+}
+
+/* ===================
+CARDS
+=================== */
+
+.cards{
+
+display:grid;
+
+grid-template-columns:repeat(4,1fr);
+
+gap:20px;
+
+}
+
+.card{
+
+background:white;
+
+padding:22px;
+
+border-radius:18px;
+
+box-shadow:0 10px 20px rgba(0,0,0,.05);
+
+transition:.3s;
+
+}
+
+.card:hover{
+
+transform:translateY(-6px);
+
+}
+
+.card-top{
+
+display:flex;
+
+justify-content:space-between;
+
+}
+
+.icon{
+
+width:55px;
+height:55px;
+
+border-radius:15px;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+font-size:22px;
+
+color:white;
+
+}
+
+.orange{
+
+background:#f59e0b;
+
+}
+
+.blue{
+
+background:#3b82f6;
+
+}
+
+.green{
+
+background:#10b981;
+
+}
+
+.red{
+
+background:#ef4444;
+
+}
+
+.card h4{
+
+margin-top:18px;
+
+color:#6b7280;
+
+font-weight:500;
+
+}
+
+.card h2{
+
+margin-top:8px;
+
+font-size:30px;
+
+}
+
+.progress{
+
+margin-top:18px;
+
+height:8px;
+
+background:#eee;
+
+border-radius:10px;
+
+overflow:hidden;
+
+}
+
+.progress span{
+
+display:block;
+
+height:100%;
+
+background:#10b981;
+
+}
+
+/* RESPONSIVE */
+
+@media(max-width:1100px){
+
+.cards{
+
+grid-template-columns:repeat(2,1fr);
+
+}
+
+}
+
+@media(max-width:768px){
+
+.sidebar{
+
+width:80px;
+
+}
+
+.sidebar h2{
+
+display:none;
+
+}
+
+.menu span{
+
+display:none;
+
+}
+
+.main{
+
+margin-left:80px;
+
+width:calc(100% - 80px);
+
+}
+
+.cards{
+
+grid-template-columns:1fr;
+
+}
+
+.search{
+
+width:220px;
+
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<div class="logo">
+
+<i class="fa-solid fa-truck-fast"></i>
+
+<h2>TransitOps</h2>
+
+</div>
+
+<ul class="menu">
+
+<li class="active">
+<i class="fa-solid fa-house"></i>
+<span>Dashboard</span>
+</li>
+
+<li>
+<i class="fa-solid fa-truck"></i>
+<span>Vehicles</span>
+</li>
+
+<li>
+<i class="fa-solid fa-user"></i>
+<span>Drivers</span>
+</li>
+
+<li>
+<i class="fa-solid fa-route"></i>
+<span>Trips</span>
+</li>
+
+<li>
+<i class="fa-solid fa-screwdriver-wrench"></i>
+<span>Maintenance</span>
+</li>
+
+<li>
+<i class="fa-solid fa-gas-pump"></i>
+<span>Fuel</span>
+</li>
+
+<li>
+<i class="fa-solid fa-money-bill"></i>
+<span>Expenses</span>
+</li>
+
+<li>
+<i class="fa-solid fa-chart-column"></i>
+<span>Analytics</span>
+</li>
+
+<li>
+<i class="fa-solid fa-gear"></i>
+<span>Settings</span>
+</li>
+
+</ul>
+
+</div>
+
+<!-- MAIN -->
+
+<div class="main">
+
+<!-- NAVBAR -->
+
+<div class="navbar">
+
+<div class="search">
+
+<i class="fa-solid fa-magnifying-glass"></i>
+
+<input type="text" placeholder="Search...">
+
+</div>
+
+<div class="right">
+
+<div class="bell">
+
+<i class="fa-solid fa-bell"></i>
+
+<div class="dot"></div>
+
+</div>
+
+<div class="profile">
+
+<img src="https://i.pravatar.cc/100" alt="">
+
+<div>
+
+<h4>Fleet Manager</h4>
+
+<p>Admin</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- KPI CARDS -->
+
+<div class="cards">
+
+<div class="card">
+
+<div class="card-top">
+
+<div>
+
+<h4>Active Vehicles</h4>
+
+<h2>126</h2>
+
+</div>
+
+<div class="icon orange">
+
+<i class="fa-solid fa-truck"></i>
+
+</div>
+
+</div>
+
+<div class="progress">
+
+<span style="width:90%"></span>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="card-top">
+
+<div>
+
+<h4>Drivers</h4>
+
+<h2>58</h2>
+
+</div>
+
+<div class="icon blue">
+
+<i class="fa-solid fa-user"></i>
+
+</div>
+
+</div>
+
+<div class="progress">
+
+<span style="width:70%"></span>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="card-top">
+
+<div>
+
+<h4>Trips Today</h4>
+
+<h2>84</h2>
+
+</div>
+
+<div class="icon green">
+
+<i class="fa-solid fa-route"></i>
+
+</div>
+
+</div>
+
+<div class="progress">
+
+<span style="width:82%"></span>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="card-top">
+
+<div>
+
+<h4>Maintenance</h4>
+
+<h2>12</h2>
+
+</div>
+
+<div class="icon red">
+
+<i class="fa-solid fa-screwdriver-wrench"></i>
+
+</div>
+
+</div>
+
+<div class="progress">
+
+<span style="width:40%"></span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
