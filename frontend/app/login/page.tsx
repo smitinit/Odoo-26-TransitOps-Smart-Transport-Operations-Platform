@@ -1,15 +1,28 @@
 "use client"
 
+import * as React from "react"
 import Image from "next/image"
-import { LoginForm } from "@/components/login-form"
+import { useRouter } from "next/navigation"
 import { GalleryVerticalEndIcon } from "lucide-react"
 
+import { useAuth } from "@/components/auth/auth-provider"
+import { LoginForm } from "@/components/login-form"
+
 export default function LoginPage() {
+  const { isAuthenticated, isLoading } = useAuth()
+  const router = useRouter()
+
+  React.useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace("/dashboard")
+    }
+  }, [isAuthenticated, isLoading, router])
+
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex justify-center gap-2 md:justify-start">
-          <a href="#" className="flex items-center gap-2 font-medium">
+          <a href="/login" className="flex items-center gap-2 font-medium">
             <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
               <GalleryVerticalEndIcon className="size-4" />
             </div>

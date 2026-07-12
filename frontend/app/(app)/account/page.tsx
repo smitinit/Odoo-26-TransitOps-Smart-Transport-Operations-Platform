@@ -1,10 +1,24 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+"use client"
+
+import { useAuth } from "@/components/auth/auth-provider"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 
 export default function AccountPage() {
+  const { user } = useAuth()
+  const fullName = user
+    ? `${user.first_name} ${user.last_name}`.trim()
+    : ""
+  const initials = fullName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("")
+
   return (
     <div className="flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
       <div>
@@ -17,17 +31,17 @@ export default function AccountPage() {
       <div className="rounded-xl border bg-card p-6">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
           <Avatar className="size-16 rounded-xl">
-            <AvatarImage src="/avatars/shadcn.jpg" alt="User" />
-            <AvatarFallback className="rounded-xl text-lg">CN</AvatarFallback>
+            <AvatarFallback className="rounded-xl text-lg">
+              {initials || "TO"}
+            </AvatarFallback>
           </Avatar>
           <div className="flex flex-1 flex-col gap-1">
-            <p className="font-medium">shadcn</p>
-            <p className="text-sm text-muted-foreground">m@example.com</p>
-            <p className="text-xs text-muted-foreground">Fleet Operations Manager</p>
+            <p className="font-medium">{fullName || "—"}</p>
+            <p className="text-sm text-muted-foreground">{user?.email ?? "—"}</p>
+            <p className="text-xs text-muted-foreground">
+              {user?.is_superuser ? "Superuser" : "Signed in"}
+            </p>
           </div>
-          <Button variant="outline" size="sm">
-            Change photo
-          </Button>
         </div>
 
         <Separator className="my-6" />
@@ -35,25 +49,31 @@ export default function AccountPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-2">
             <Label htmlFor="full-name">Full name</Label>
-            <Input id="full-name" defaultValue="shadcn" />
+            <Input id="full-name" value={fullName} readOnly />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" defaultValue="m@example.com" />
+            <Input
+              id="email"
+              type="email"
+              value={user?.email ?? ""}
+              readOnly
+            />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="phone">Phone</Label>
-            <Input id="phone" type="tel" defaultValue="+1 (555) 012-3456" />
+            <Label htmlFor="first-name">First name</Label>
+            <Input id="first-name" value={user?.first_name ?? ""} readOnly />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="role">Role</Label>
-            <Input id="role" defaultValue="Fleet Operations Manager" readOnly />
+            <Label htmlFor="last-name">Last name</Label>
+            <Input id="last-name" value={user?.last_name ?? ""} readOnly />
           </div>
         </div>
 
         <div className="mt-6 flex justify-end gap-2">
-          <Button variant="outline">Cancel</Button>
-          <Button>Save changes</Button>
+          <Button variant="outline" disabled>
+            Edit profile coming soon
+          </Button>
         </div>
       </div>
     </div>

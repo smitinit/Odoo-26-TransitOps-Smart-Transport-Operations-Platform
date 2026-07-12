@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 
+import { useAuth } from "@/components/auth/auth-provider"
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import {
@@ -26,57 +27,59 @@ import {
   CommandIcon,
 } from "lucide-react"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+const navMain = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: <LayoutDashboardIcon />,
   },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: <LayoutDashboardIcon />,
-    },
-    {
-      title: "Fleet",
-      url: "/fleet",
-      icon: <TruckIcon />,
-    },
-    {
-      title: "Drivers",
-      url: "/drivers",
-      icon: <UsersIcon />,
-    },
-    {
-      title: "Trips",
-      url: "/trips",
-      icon: <RouteIcon />,
-    },
-    {
-      title: "Maintenance",
-      url: "/maintenance",
-      icon: <WrenchIcon />,
-    },
-    {
-      title: "Fuel & Expenses",
-      url: "/fuel-expenses",
-      icon: <FuelIcon />,
-    },
-    {
-      title: "Analytics",
-      url: "/analytics",
-      icon: <ChartBarIcon />,
-    },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: <Settings2Icon />,
-    },
-  ],
-}
+  {
+    title: "Fleet",
+    url: "/fleet",
+    icon: <TruckIcon />,
+  },
+  {
+    title: "Drivers",
+    url: "/drivers",
+    icon: <UsersIcon />,
+  },
+  {
+    title: "Trips",
+    url: "/trips",
+    icon: <RouteIcon />,
+  },
+  {
+    title: "Maintenance",
+    url: "/maintenance",
+    icon: <WrenchIcon />,
+  },
+  {
+    title: "Fuel & Expenses",
+    url: "/fuel-expenses",
+    icon: <FuelIcon />,
+  },
+  {
+    title: "Analytics",
+    url: "/analytics",
+    icon: <ChartBarIcon />,
+  },
+  {
+    title: "Settings",
+    url: "/settings",
+    icon: <Settings2Icon />,
+  },
+]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAuth()
+
+  const displayUser = {
+    name: user
+      ? `${user.first_name} ${user.last_name}`.trim() || user.email
+      : "Guest",
+    email: user?.email ?? "",
+  }
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -93,10 +96,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={displayUser} />
       </SidebarFooter>
     </Sidebar>
   )
