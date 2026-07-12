@@ -10,9 +10,9 @@ from uuid import UUID
 from app.database.session import get_db
 from app.shared.responses import SuccessResponse
 from app.shared.exceptions import NotFoundException, AppException
-from app.api.dependencies.auth import get_current_user
+from app.api.dependencies.auth import get_current_user, get_current_active_superuser
 from app.modules.users.models import User
-from app.modules.users.schemas import UserCreate, UserResponse
+from app.modules.users.schemas import UserCreate, UserUpdate, UserResponse
 from app.modules.users.service import user_service
 from app.core.security import get_password_hash
 
@@ -77,7 +77,7 @@ async def _delete(db: AsyncSession, obj):
 
 
 # ============================================================
-# USERS — Create + List (extends existing /me endpoint)
+# USERS — Admin create / list / update / delete
 # ============================================================
 users_router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -85,7 +85,7 @@ users_router = APIRouter(prefix="/users", tags=["Users"])
 async def create_user(
     body: UserCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_active_superuser),
 ):
     """Create a new user (admin only)."""
     user = await user_service.create_user(db, obj_in=body)
@@ -96,11 +96,62 @@ async def list_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_active_superuser),
 ):
-    """List all users."""
-    users = await _list_all(db, User, skip, limit)
+    """List all users (admin only)."""
+    result = await db.execute(
+        select(User)
+        .where(User.deleted_at.is_(None))
+        .offset(skip)
+        .limit(limit)
+        .order_by(User.created_at.desc())
+    )
+    users = result.scalars().all()
     return SuccessResponse(message="Users retrieved successfully", data=users)
+
+@users_router.get("/{user_id}", response_model=SuccessResponse[UserResponse])
+async def get_user(
+    user_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_superuser),
+):
+    """Get a user by id (admin only)."""
+    try:
+        user = await user_service.get_by_id(db, id=user_id)
+    except NotFoundException:
+        raise NotFoundException(message=f"User with id {user_id} not found")
+    if user.deleted_at is not None:
+        raise NotFoundException(message=f"User with id {user_id} not found")
+    return SuccessResponse(message="User retrieved successfully", data=user)
+
+@users_router.patch("/{user_id}", response_model=SuccessResponse[UserResponse])
+async def update_user(
+    user_id: UUID,
+    body: UserUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_superuser),
+):
+    """Update a user (admin only)."""
+    user = await user_service.update_user(db, user_id=user_id, obj_in=body)
+    return SuccessResponse(message="User updated successfully", data=user)
+
+@users_router.delete("/{user_id}", response_model=SuccessResponse[UserResponse])
+async def delete_user(
+    user_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_superuser),
+):
+    """Soft-delete a user (admin only)."""
+    if current_user.id == user_id:
+        raise AppException(message="You cannot delete your own account", status_code=400)
+    try:
+        user = await user_service.get_by_id(db, id=user_id)
+    except NotFoundException:
+        raise NotFoundException(message=f"User with id {user_id} not found")
+    if user.deleted_at is not None:
+        raise NotFoundException(message=f"User with id {user_id} not found")
+    deleted = await user_service.delete(db, id=user_id)
+    return SuccessResponse(message="User deleted successfully", data=deleted)
 
 
 # ============================================================

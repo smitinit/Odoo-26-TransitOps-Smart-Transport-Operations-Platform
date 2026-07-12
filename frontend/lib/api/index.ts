@@ -1,5 +1,6 @@
 export { API_BASE_URL } from "@/lib/api/config"
 export { apiRequest } from "@/lib/api/client"
 export * from "@/lib/api/auth"
+export * from "@/lib/api/users"
 export * from "@/lib/api/tokens"
 export * from "@/lib/api/types"

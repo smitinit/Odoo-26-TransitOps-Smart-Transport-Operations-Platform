@@ -25,6 +25,7 @@ import {
   ChartBarIcon,
   Settings2Icon,
   CommandIcon,
+  UserCogIcon,
 } from "lucide-react"
 
 const navMain = [
@@ -80,6 +81,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     email: user?.email ?? "",
   }
 
+  const items = user?.is_superuser
+    ? [
+        ...navMain.slice(0, 1),
+        {
+          title: "Users",
+          url: "/users",
+          icon: <UserCogIcon />,
+        },
+        ...navMain.slice(1),
+      ]
+    : navMain
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -96,7 +109,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMain} />
+        <NavMain items={items} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={displayUser} />

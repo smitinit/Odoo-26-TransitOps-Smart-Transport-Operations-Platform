@@ -28,6 +28,33 @@ export type User = {
   updated_at?: string
 }
 
+export type Role = {
+  id: string
+  name: string
+  description: string | null
+  created_at?: string
+}
+
+export type UserCreateInput = {
+  email: string
+  first_name: string
+  last_name: string
+  password: string
+  is_active?: boolean
+  is_superuser?: boolean
+  role_id?: string | null
+}
+
+export type UserUpdateInput = {
+  email?: string
+  first_name?: string
+  last_name?: string
+  password?: string
+  is_active?: boolean
+  is_superuser?: boolean
+  role_id?: string | null
+}
+
 export class ApiError extends Error {
   status: number
   errors: unknown[]

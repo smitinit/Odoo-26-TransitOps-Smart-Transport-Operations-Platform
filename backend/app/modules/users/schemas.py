@@ -19,6 +19,7 @@ class UserUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     is_active: Optional[bool] = None
+    is_superuser: Optional[bool] = None
     role_id: Optional[UUID] = None
     password: Optional[str] = Field(None, min_length=8)
 

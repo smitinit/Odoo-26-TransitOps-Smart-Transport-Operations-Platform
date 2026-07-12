@@ -35,4 +35,29 @@ class UserService(BaseService[User, UserCreate, UserUpdate]):
         await db.refresh(db_obj)
         return db_obj
 
+    async def update_user(
+        self, db: AsyncSession, *, user_id: UUID, obj_in: UserUpdate
+    ) -> User:
+        user = await self.repository.get_by_id(db, user_id)
+        if not user or user.deleted_at is not None:
+            raise AppException(
+                message="User not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        update_data = obj_in.model_dump(exclude_unset=True)
+        password = update_data.pop("password", None)
+        if password is not None:
+            update_data["hashed_password"] = get_password_hash(password)
+
+        if "email" in update_data and update_data["email"] != user.email:
+            existing = await self.repository.get_by_email(db, email=update_data["email"])
+            if existing and existing.id != user.id:
+                raise AppException(
+                    message="A user with this email already exists.",
+                    status_code=status.HTTP_409_CONFLICT,
+                )
+
+        return await self.repository.update(db, db_obj=user, obj_in=update_data)
+
 user_service = UserService(user_repository)
