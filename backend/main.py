@@ -9,7 +9,7 @@ from app.database.events import setup_audit_events
 from app.api.v1.health import router as health_router
 from app.modules.auth.router import router as auth_router
 from app.modules.users.router import router as users_router
-# Import other routers here as they are built
+from app.api.v1.crud import router as crud_router
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -40,6 +40,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router, prefix=settings.API_V1_STR)
     app.include_router(auth_router, prefix=settings.API_V1_STR)
     app.include_router(users_router, prefix=settings.API_V1_STR)
+    app.include_router(crud_router, prefix=settings.API_V1_STR)
     
     return app
 
