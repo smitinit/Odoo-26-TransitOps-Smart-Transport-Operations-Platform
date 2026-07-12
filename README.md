@@ -70,7 +70,20 @@ http://localhost:3000
 
 ---
 
-### 3. Backend Setup
+### 3. Database Setup
+
+- Install PostgreSQL
+- Create a database named:
+
+```
+transitops
+```
+
+- Configure your database connection in the backend environment file (see [backend README](backend/README.md)).
+
+---
+
+### 4. Backend Setup
 
 ```bash
 cd backend
@@ -85,6 +98,11 @@ source venv/bin/activate
 
 pip install -r requirements.txt
 
+# Required: apply DB migrations before starting the API
+alembic upgrade head
+
+python scripts/seed_roles.py
+
 uvicorn main:app --reload
 ```
 
@@ -93,19 +111,6 @@ The backend will run on:
 ```
 http://localhost:8000
 ```
-
----
-
-### 4. Database Setup
-
-- Install PostgreSQL
-- Create a database named:
-
-```
-transitops
-```
-
-- Configure your database connection in the backend environment file.
 
 ---
 
