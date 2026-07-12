@@ -2,7 +2,6 @@ import asyncio
 import sys
 import os
 
-# Add parent dir to path so we can import app
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
@@ -17,38 +16,54 @@ async def seed_data():
     async_session = async_sessionmaker(engine, expire_on_commit=False)
 
     async with async_session() as session:
-        # Create permissions
-        perms = ["vehicle:create", "vehicle:read", "vehicle:update", "vehicle:delete"]
+        # 1. Define Permissions
+        permissions = [
+            # Vehicle
+            "vehicle.create", "vehicle.read", "vehicle.update", "vehicle.delete",
+            # Driver
+            "driver.create", "driver.read", "driver.update", "driver.delete",
+            # Trips
+            "trip.create", "trip.dispatch", "trip.complete", "trip.cancel",
+            # Maintenance
+            "maintenance.create", "maintenance.update",
+            # Finance
+            "fuel.create", "expense.create",
+            # Dashboard
+            "dashboard.view",
+            # Notifications
+            "notification.read",
+            # Settings
+            "settings.manage"
+        ]
+
         db_perms = []
-        for p in perms:
+        for p in permissions:
             result = await session.execute(select(Permission).where(Permission.name == p))
             perm = result.scalar_one_or_none()
             if not perm:
-                perm = Permission(name=p, description=f"Permission to {p}")
+                perm = Permission(name=p, description=f"Permission for {p}")
                 session.add(perm)
             db_perms.append(perm)
-            
         await session.commit()
-        for p in db_perms:
-            await session.refresh(p)
+        for p in db_perms: await session.refresh(p)
 
-        # Create roles
-        roles_data = ["admin", "driver", "manager"]
+        # 2. Define Roles
+        roles = ["Admin", "Fleet Manager", "Dispatcher", "Safety Officer", "Financial Analyst"]
         db_roles = []
-        for r in roles_data:
+        for r in roles:
             result = await session.execute(select(Role).where(Role.name == r))
             role = result.scalar_one_or_none()
             if not role:
-                role = Role(name=r, description=f"{r.capitalize()} role")
+                role = Role(name=r, description=f"{r} role")
                 session.add(role)
             db_roles.append(role)
-            
         await session.commit()
-        for r in db_roles:
-            await session.refresh(r)
+        for r in db_roles: await session.refresh(r)
 
-        # Assign all perms to admin
-        admin_role = next(r for r in db_roles if r.name == "admin")
+        # 3. Assign Permissions to Roles
+        admin_role = next(r for r in db_roles if r.name == "Admin")
+        
+        # Give Admin all permissions
         for p in db_perms:
             result = await session.execute(
                 select(RolePermission).where(
@@ -59,15 +74,14 @@ async def seed_data():
             if not result.scalar_one_or_none():
                 rp = RolePermission(role_id=admin_role.id, permission_id=p.id)
                 session.add(rp)
-                
         await session.commit()
 
-        # Create Admin User
+        # 4. Create Admin User
         result = await session.execute(select(User).where(User.email == "admin@transitops.com"))
         if not result.scalar_one_or_none():
             admin_user = User(
                 email="admin@transitops.com",
-                hashed_password=get_password_hash("SuperSecret123!"),
+                hashed_password=get_password_hash("Admin@123"),
                 first_name="System",
                 last_name="Admin",
                 is_active=True,
@@ -76,7 +90,7 @@ async def seed_data():
             )
             session.add(admin_user)
             await session.commit()
-            print("Admin user created: admin@transitops.com / SuperSecret123!")
+            print("Admin user created successfully.")
 
 if __name__ == "__main__":
     asyncio.run(seed_data())
