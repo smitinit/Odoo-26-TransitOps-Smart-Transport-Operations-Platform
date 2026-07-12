@@ -1,4 +1,4 @@
-# 🚛 TransitOps – Smart Transport Operations Platform
+#  TransitOps – Smart Transport Operations Platform
 
 TransitOps is a web-based transport management platform developed for the **Odoo Hackathon**. It helps organizations manage their fleet, drivers, trips, maintenance, and operational expenses from a single dashboard.
 
@@ -6,7 +6,7 @@ The goal of the project is to replace manual spreadsheets and logbooks with a ce
 
 ---
 
-## 🚀 Tech Stack
+##  Tech Stack
 
 ### Frontend
 - Next.js
@@ -20,7 +20,7 @@ The goal of the project is to replace manual spreadsheets and logbooks with a ce
 
 ---
 
-## ✨ Features
+##  Features
 
 - Secure Authentication
 - Dashboard with Fleet Overview
@@ -33,7 +33,7 @@ The goal of the project is to replace manual spreadsheets and logbooks with a ce
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 ```text
 TransitOps/
@@ -46,7 +46,7 @@ TransitOps/
 
 ---
 
-## ⚙️ Getting Started
+##  Getting Started
 
 ### 1. Clone the repository
 
@@ -110,7 +110,7 @@ transitops
 
 ---
 
-## 📋 Core Modules
+##  Core Modules
 
 - Authentication
 - Dashboard
@@ -123,7 +123,7 @@ transitops
 
 ---
 
-## 👥 Team
+##  Team
 
 Developed for the **Odoo Hackathon**.
 
@@ -136,6 +136,6 @@ Team Members:
 
 ---
 
-## 📄 License
+##  License
 
 This project is developed for educational and hackathon purposes.
