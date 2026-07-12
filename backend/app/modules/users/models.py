@@ -1,4 +1,5 @@
 from typing import List, Optional
+from uuid import UUID
 from sqlalchemy import String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.shared.base.model import BaseModel, SoftDeleteMixin
@@ -13,4 +14,4 @@ class User(BaseModel, SoftDeleteMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    role_id: Mapped[Optional["UUID"]] = mapped_column("role_id", nullable=True) # Will setup FK later when role model is loaded
+    role_id: Mapped[Optional[UUID]] = mapped_column("role_id", nullable=True) # Will setup FK later when role model is loaded
