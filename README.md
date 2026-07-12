@@ -1,5 +1,7 @@
 #  TransitOps – Smart Transport Operations Platform
 
+_(Since we haven't actually deployed the backend, the client side link(deployed using vercel) won't work). So please follow the below given instructions to clone it locally and make it working!_
+
 TransitOps is a web-based transport management platform developed for the **Odoo Hackathon**. It helps organizations manage their fleet, drivers, trips, maintenance, and operational expenses from a single dashboard.
 
 The goal of the project is to replace manual spreadsheets and logbooks with a centralized system that improves efficiency and enforces transport business rules.
