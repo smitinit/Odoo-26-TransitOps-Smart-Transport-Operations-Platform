@@ -1,10 +1,9 @@
 "use client"
 
-import { SearchIcon } from "lucide-react"
 import { usePathname } from "next/navigation"
 
 import { ModeToggle } from "@/components/mode-toggle"
-import { Input } from "@/components/ui/input"
+import { NavFeatureSearch } from "@/components/nav-feature-search"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
@@ -36,15 +35,7 @@ export function SiteHeader() {
         />
         <h1 className="text-base font-medium">{title}</h1>
         <div className="ml-auto flex items-center gap-2">
-          <div className="relative w-48 sm:w-64">
-            <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="pl-8"
-              aria-label="Search"
-            />
-          </div>
+          <NavFeatureSearch />
           <ModeToggle />
         </div>
       </div>
