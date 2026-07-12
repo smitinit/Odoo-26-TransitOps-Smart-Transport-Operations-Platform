@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 
 import { ModeToggle } from "@/components/mode-toggle"
 import { NavFeatureSearch } from "@/components/nav-feature-search"
+import { NavNotificationBell } from "@/components/nav-notification-bell"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
@@ -36,6 +37,7 @@ export function SiteHeader() {
         <h1 className="text-base font-medium">{title}</h1>
         <div className="ml-auto flex items-center gap-2">
           <NavFeatureSearch />
+          <NavNotificationBell />
           <ModeToggle />
         </div>
       </div>

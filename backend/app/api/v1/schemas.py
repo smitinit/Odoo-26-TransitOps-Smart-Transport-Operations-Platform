@@ -440,3 +440,26 @@ class GeneralSettingsUpdate(BaseModel):
     depot_name: Optional[str] = None
     currency: Optional[str] = None
     distance_unit: Optional[str] = None
+
+
+# ============================================================
+# NOTIFICATIONS
+# ============================================================
+class NotificationResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    title: str
+    message: str
+    is_read: bool
+    category: str
+    event_type: str
+    entity_type: Optional[str] = None
+    entity_id: Optional[UUID] = None
+    permission_key: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UnreadCountResponse(BaseModel):
+    count: int

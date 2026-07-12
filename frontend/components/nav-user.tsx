@@ -22,6 +22,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useAuth } from "@/components/auth/auth-provider"
+import { useNotifications } from "@/components/notifications/notifications-provider"
+import { Badge } from "@/components/ui/badge"
 import {
   EllipsisVerticalIcon,
   CircleUserRoundIcon,
@@ -49,6 +51,7 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
   const { logout } = useAuth()
+  const { unreadCount } = useNotifications()
   const fallback = initials(user.name) || "TO"
 
   return (
@@ -108,7 +111,15 @@ export function NavUser({
               </DropdownMenuItem>
               <DropdownMenuItem render={<Link href="/notifications" />}>
                 <BellIcon />
-                Notifications
+                <span className="flex-1">Notifications</span>
+                {unreadCount > 0 ? (
+                  <Badge
+                    variant="default"
+                    className="h-5 min-w-5 justify-center rounded-md px-1.5 text-[10px]"
+                  >
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </Badge>
+                ) : null}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

@@ -450,6 +450,35 @@ export type GeneralSettings = {
 
 export type GeneralSettingsUpdate = Partial<GeneralSettings>
 
+export type NotificationCategory =
+  | "trip"
+  | "vehicle"
+  | "driver"
+  | "maintenance"
+  | "fuel"
+  | "expense"
+  | "system"
+  | string
+
+export type AppNotification = {
+  id: string
+  user_id: string
+  title: string
+  message: string
+  is_read: boolean
+  category: NotificationCategory
+  event_type: string
+  entity_type?: string | null
+  entity_id?: string | null
+  permission_key?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type UnreadCount = {
+  count: number
+}
+
 export class ApiError extends Error {
   status: number
   errors: unknown[]

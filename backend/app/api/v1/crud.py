@@ -52,6 +52,8 @@ from app.api.v1.schemas import (
 from app.api.v1.dashboard_service import build_dashboard_overview
 from app.api.v1.analytics_service import build_analytics_overview
 from app.modules.settings.models import Setting
+from app.modules.notifications.router import notifications_router
+from app.modules.notifications.service import notify_permission_holders
 
 GENERAL_SETTINGS_KEY = "general"
 DEFAULT_GENERAL_SETTINGS = GeneralSettings()
@@ -254,6 +256,17 @@ async def create_vehicle(
             message=f"Could not create vehicle (check unique VIN / registration): {e}",
             status_code=400,
         )
+    await notify_permission_holders(
+        db,
+        permission="vehicle.read",
+        category="vehicle",
+        event_type="vehicle.created",
+        title=f"Vehicle {vehicle.license_plate} added",
+        message=f"{vehicle.make} {vehicle.model} registered as {vehicle.vehicle_type}.",
+        entity_type="vehicle",
+        entity_id=vehicle.id,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(message="Vehicle created successfully", data=vehicle)
 
 @vehicles_router.get("/{vehicle_id}", response_model=SuccessResponse[VehicleResponse])
@@ -277,6 +290,20 @@ async def update_vehicle(
     if "status" in data and data["status"] is not None:
         data["status"] = VehicleStatus(data["status"])
     vehicle = await _update(db, vehicle, data)
+    status_label = (
+        vehicle.status.value if hasattr(vehicle.status, "value") else str(vehicle.status)
+    )
+    await notify_permission_holders(
+        db,
+        permission="vehicle.read",
+        category="vehicle",
+        event_type="vehicle.updated",
+        title=f"Vehicle {vehicle.license_plate} updated",
+        message=f"Status is now {status_label}.",
+        entity_type="vehicle",
+        entity_id=vehicle.id,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(message="Vehicle updated successfully", data=vehicle)
 
 @vehicles_router.delete("/{vehicle_id}", response_model=SuccessResponse)
@@ -286,7 +313,20 @@ async def delete_vehicle(
     current_user: User = Depends(require_permission("vehicle.delete")),
 ):
     vehicle = await _get_or_404(db, Vehicle, vehicle_id)
+    plate = vehicle.license_plate
+    vehicle_id_copy = vehicle.id
     await _delete(db, vehicle)
+    await notify_permission_holders(
+        db,
+        permission="vehicle.read",
+        category="vehicle",
+        event_type="vehicle.deleted",
+        title=f"Vehicle {plate} deleted",
+        message=f"Registration {plate} was removed from the fleet.",
+        entity_type="vehicle",
+        entity_id=vehicle_id_copy,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(message="Vehicle deleted successfully")
 
 
@@ -359,6 +399,18 @@ async def create_driver(
             message=f"Could not create driver (check unique license): {e}",
             status_code=400,
         )
+    name = f"{driver.first_name} {driver.last_name}".strip()
+    await notify_permission_holders(
+        db,
+        permission="driver.read",
+        category="driver",
+        event_type="driver.created",
+        title=f"Driver {name} added",
+        message=f"License {driver.license_number} registered.",
+        entity_type="driver",
+        entity_id=driver.id,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(message="Driver created successfully", data=_driver_response(driver))
 
 @drivers_router.get("/{driver_id}", response_model=SuccessResponse[DriverResponse])
@@ -382,6 +434,21 @@ async def update_driver(
     if "status" in data and data["status"] is not None:
         data["status"] = DriverStatus(data["status"])
     driver = await _update(db, driver, data)
+    name = f"{driver.first_name} {driver.last_name}".strip()
+    status_label = (
+        driver.status.value if hasattr(driver.status, "value") else str(driver.status)
+    )
+    await notify_permission_holders(
+        db,
+        permission="driver.read",
+        category="driver",
+        event_type="driver.updated",
+        title=f"Driver {name} updated",
+        message=f"Status is now {status_label}.",
+        entity_type="driver",
+        entity_id=driver.id,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(message="Driver updated successfully", data=_driver_response(driver))
 
 @drivers_router.delete("/{driver_id}", response_model=SuccessResponse)
@@ -391,7 +458,20 @@ async def delete_driver(
     current_user: User = Depends(require_permission("driver.delete")),
 ):
     driver = await _get_or_404(db, Driver, driver_id)
+    name = f"{driver.first_name} {driver.last_name}".strip()
+    driver_id_copy = driver.id
     await _delete(db, driver)
+    await notify_permission_holders(
+        db,
+        permission="driver.read",
+        category="driver",
+        event_type="driver.deleted",
+        title=f"Driver {name} deleted",
+        message=f"{name} was removed from the driver registry.",
+        entity_type="driver",
+        entity_id=driver_id_copy,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(message="Driver deleted successfully")
 
 
@@ -486,6 +566,17 @@ async def create_trip(
         await db.commit()
         await db.refresh(trip)
 
+    await notify_permission_holders(
+        db,
+        permission="trip.read",
+        category="trip",
+        event_type="trip.created",
+        title=f"Trip {trip.origin} → {trip.destination} created",
+        message=f"New trip scheduled with status {trip.status.value if hasattr(trip.status, 'value') else trip.status}.",
+        entity_type="trip",
+        entity_id=trip.id,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(message="Trip created successfully", data=await _trip_response(db, trip))
 
 @trips_router.get("/{trip_id}", response_model=SuccessResponse[TripResponse])
@@ -529,6 +620,21 @@ async def update_trip(
         await db.commit()
         await db.refresh(trip)
 
+    status_label = trip.status.value if hasattr(trip.status, "value") else str(trip.status)
+    event = "trip.updated"
+    if "status" in data and data["status"] != old_status:
+        event = f"trip.{status_label.lower()}"
+    await notify_permission_holders(
+        db,
+        permission="trip.read",
+        category="trip",
+        event_type=event,
+        title=f"Trip {trip.origin} → {trip.destination}",
+        message=f"Trip status is now {status_label}.",
+        entity_type="trip",
+        entity_id=trip.id,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(message="Trip updated successfully", data=await _trip_response(db, trip))
 
 @trips_router.delete("/{trip_id}", response_model=SuccessResponse)
@@ -538,9 +644,22 @@ async def delete_trip(
     current_user: User = Depends(require_permission("trip.cancel")),
 ):
     trip = await _get_or_404(db, Trip, trip_id)
+    route = f"{trip.origin} → {trip.destination}"
+    trip_id_copy = trip.id
     if trip.status == TripStatus.IN_PROGRESS:
         await _apply_status_side_effects(db, trip, TripStatus.IN_PROGRESS, TripStatus.CANCELLED)
     await _delete(db, trip)
+    await notify_permission_holders(
+        db,
+        permission="trip.read",
+        category="trip",
+        event_type="trip.deleted",
+        title=f"Trip {route} deleted",
+        message="Trip was removed from the live board.",
+        entity_type="trip",
+        entity_id=trip_id_copy,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(message="Trip deleted successfully")
 
 
@@ -621,6 +740,19 @@ async def create_maintenance(
         await db.commit()
         await db.refresh(record)
 
+    vehicle = await db.get(Vehicle, record.vehicle_id)
+    plate = vehicle.license_plate if vehicle else "vehicle"
+    await notify_permission_holders(
+        db,
+        permission="maintenance.read",
+        category="maintenance",
+        event_type="maintenance.created",
+        title=f"Maintenance scheduled for {plate}",
+        message=record.description[:200] or f"{record.maintenance_type} maintenance created.",
+        entity_type="maintenance",
+        entity_id=record.id,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(
         message="Maintenance record created successfully",
         data=await _maintenance_response(db, record),
@@ -677,6 +809,22 @@ async def update_maintenance(
             await db.commit()
             await db.refresh(record)
 
+    vehicle = await db.get(Vehicle, record.vehicle_id)
+    plate = vehicle.license_plate if vehicle else "vehicle"
+    status_label = (
+        record.status.value if hasattr(record.status, "value") else str(record.status)
+    )
+    await notify_permission_holders(
+        db,
+        permission="maintenance.read",
+        category="maintenance",
+        event_type="maintenance.updated",
+        title=f"Maintenance updated for {plate}",
+        message=f"Status is now {status_label}.",
+        entity_type="maintenance",
+        entity_id=record.id,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(
         message="Maintenance record updated successfully",
         data=await _maintenance_response(db, record),
@@ -690,10 +838,13 @@ async def delete_maintenance(
 ):
     record = await _get_or_404(db, Maintenance, record_id)
     vehicle_id = record.vehicle_id
+    record_id_copy = record.id
     was_open = record.status in {
         MaintenanceStatus.SCHEDULED,
         MaintenanceStatus.IN_PROGRESS,
     }
+    vehicle = await db.get(Vehicle, vehicle_id)
+    plate = vehicle.license_plate if vehicle else "vehicle"
     await _delete(db, record)
     if was_open:
         open_q = await db.execute(
@@ -709,6 +860,17 @@ async def delete_maintenance(
         if (open_q.scalar() or 0) == 0:
             await _sync_vehicle_for_maintenance(db, vehicle_id, putting_in_shop=False)
             await db.commit()
+    await notify_permission_holders(
+        db,
+        permission="maintenance.read",
+        category="maintenance",
+        event_type="maintenance.deleted",
+        title=f"Maintenance deleted for {plate}",
+        message="A maintenance record was removed.",
+        entity_type="maintenance",
+        entity_id=record_id_copy,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(message="Maintenance record deleted successfully")
 
 
@@ -763,6 +925,22 @@ async def create_expense(
     data = body.model_dump()
     data["expense_type"] = ExpenseType(data["expense_type"])
     expense = await _create(db, Expense, data)
+    etype = (
+        expense.expense_type.value
+        if hasattr(expense.expense_type, "value")
+        else str(expense.expense_type)
+    )
+    await notify_permission_holders(
+        db,
+        permission="expense.read",
+        category="expense",
+        event_type="expense.created",
+        title=f"Expense logged: {etype}",
+        message=f"₹{float(expense.amount):,.2f} on {expense.date_incurred}.",
+        entity_type="expense",
+        entity_id=expense.id,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(
         message="Expense created successfully",
         data=await _expense_response(db, expense),
@@ -787,7 +965,25 @@ async def delete_expense(
     current_user: User = Depends(require_permission("expense.create")),
 ):
     expense = await _get_or_404(db, Expense, expense_id)
+    etype = (
+        expense.expense_type.value
+        if hasattr(expense.expense_type, "value")
+        else str(expense.expense_type)
+    )
+    amount = float(expense.amount)
+    expense_id_copy = expense.id
     await _delete(db, expense)
+    await notify_permission_holders(
+        db,
+        permission="expense.read",
+        category="expense",
+        event_type="expense.deleted",
+        title=f"Expense deleted: {etype}",
+        message=f"₹{amount:,.2f} expense was removed.",
+        entity_type="expense",
+        entity_id=expense_id_copy,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(message="Expense deleted successfully")
 
 
@@ -843,6 +1039,19 @@ async def create_fuel_log(
             "date_filled": body.date_filled,
         },
     )
+    vehicle = await db.get(Vehicle, log.vehicle_id)
+    plate = vehicle.license_plate if vehicle else "vehicle"
+    await notify_permission_holders(
+        db,
+        permission="fuel.read",
+        category="fuel",
+        event_type="fuel.created",
+        title=f"Fuel log for {plate}",
+        message=f"₹{float(log.cost):,.2f} · {float(log.gallons):.1f} L on {log.date_filled}.",
+        entity_type="fuel",
+        entity_id=log.id,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(
         message="Fuel log created successfully",
         data=await _fuel_response(db, log),
@@ -867,7 +1076,22 @@ async def delete_fuel_log(
     current_user: User = Depends(require_permission("fuel.create")),
 ):
     log = await _get_or_404(db, FuelLog, log_id)
+    vehicle = await db.get(Vehicle, log.vehicle_id)
+    plate = vehicle.license_plate if vehicle else "vehicle"
+    cost = float(log.cost)
+    log_id_copy = log.id
     await _delete(db, log)
+    await notify_permission_holders(
+        db,
+        permission="fuel.read",
+        category="fuel",
+        event_type="fuel.deleted",
+        title=f"Fuel log deleted for {plate}",
+        message=f"₹{cost:,.2f} fuel entry was removed.",
+        entity_type="fuel",
+        entity_id=log_id_copy,
+        exclude_user_id=current_user.id,
+    )
     return SuccessResponse(message="Fuel log deleted successfully")
 
 
@@ -1091,3 +1315,4 @@ router.include_router(finance_router)
 router.include_router(dashboard_router)
 router.include_router(analytics_router)
 router.include_router(settings_router)
+router.include_router(notifications_router)
