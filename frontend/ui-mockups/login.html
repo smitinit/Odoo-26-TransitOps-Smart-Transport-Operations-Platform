@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TransitOps Login</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#0f172a,#1e293b,#111827);
+overflow:hidden;
+}
+
+/* Background Glow */
+
+body::before{
+content:'';
+position:absolute;
+width:350px;
+height:350px;
+background:#f59e0b;
+border-radius:50%;
+top:-100px;
+left:-100px;
+filter:blur(140px);
+opacity:.5;
+}
+
+body::after{
+content:'';
+position:absolute;
+width:350px;
+height:350px;
+background:#2563eb;
+border-radius:50%;
+bottom:-100px;
+right:-100px;
+filter:blur(150px);
+opacity:.4;
+}
+
+/* Card */
+
+.login-box{
+
+width:430px;
+
+padding:45px;
+
+border-radius:25px;
+
+background:rgba(255,255,255,.08);
+
+backdrop-filter:blur(25px);
+
+border:1px solid rgba(255,255,255,.15);
+
+box-shadow:0 25px 60px rgba(0,0,0,.4);
+
+position:relative;
+
+z-index:10;
+
+}
+
+/* Logo */
+
+.logo{
+
+text-align:center;
+
+margin-bottom:30px;
+
+}
+
+.logo i{
+
+font-size:45px;
+
+color:#f59e0b;
+
+margin-bottom:12px;
+
+}
+
+.logo h1{
+
+color:white;
+
+font-size:34px;
+
+font-weight:700;
+
+}
+
+.logo p{
+
+color:#cbd5e1;
+
+font-size:14px;
+
+margin-top:5px;
+
+}
+
+/* Heading */
+
+h2{
+
+color:white;
+
+font-size:28px;
+
+margin-bottom:5px;
+
+}
+
+.sub{
+
+color:#94a3b8;
+
+margin-bottom:30px;
+
+font-size:14px;
+
+}
+
+/* Inputs */
+
+.input{
+
+position:relative;
+
+margin-bottom:20px;
+
+}
+
+.input i{
+
+position:absolute;
+
+left:18px;
+
+top:17px;
+
+color:#f59e0b;
+
+}
+
+.input input,
+.input select{
+
+width:100%;
+
+padding:15px 18px 15px 50px;
+
+border:none;
+
+outline:none;
+
+border-radius:14px;
+
+background:rgba(255,255,255,.08);
+
+color:white;
+
+font-size:15px;
+
+transition:.3s;
+
+}
+
+.input input::placeholder{
+
+color:#cbd5e1;
+
+}
+
+.input select option{
+
+color:black;
+
+}
+
+.input input:focus,
+.input select:focus{
+
+background:rgba(255,255,255,.15);
+
+box-shadow:0 0 15px rgba(245,158,11,.4);
+
+}
+
+/* Row */
+
+.row{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+margin-bottom:25px;
+
+color:#cbd5e1;
+
+font-size:14px;
+
+}
+
+.row a{
+
+color:#fbbf24;
+
+text-decoration:none;
+
+}
+
+/* Button */
+
+button{
+
+width:100%;
+
+padding:16px;
+
+border:none;
+
+border-radius:14px;
+
+background:linear-gradient(135deg,#f59e0b,#ea580c);
+
+color:white;
+
+font-size:17px;
+
+font-weight:600;
+
+cursor:pointer;
+
+transition:.35s;
+
+}
+
+button:hover{
+
+transform:translateY(-3px);
+
+box-shadow:0 15px 25px rgba(245,158,11,.4);
+
+}
+
+/* Divider */
+
+.divider{
+
+display:flex;
+
+align-items:center;
+
+margin:30px 0;
+
+}
+
+.divider::before,
+.divider::after{
+
+content:"";
+
+flex:1;
+
+height:1px;
+
+background:rgba(255,255,255,.15);
+
+}
+
+.divider span{
+
+margin:0 12px;
+
+color:#94a3b8;
+
+font-size:13px;
+
+}
+
+/* Footer */
+
+.footer{
+
+text-align:center;
+
+margin-top:20px;
+
+color:#94a3b8;
+
+font-size:13px;
+
+}
+
+@media(max-width:500px){
+
+.login-box{
+
+width:90%;
+
+padding:35px 25px;
+
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="login-box">
+
+<div class="logo">
+
+<i class="fa-solid fa-truck-fast"></i>
+
+<h1>TransitOps</h1>
+
+<p>Smart Transport Operations Platform</p>
+
+</div>
+
+<h2>Welcome Back 👋</h2>
+
+<p class="sub">Sign in to continue your journey</p>
+
+<div class="input">
+<i class="fa-solid fa-envelope"></i>
+<input type="email" placeholder="Email Address">
+</div>
+
+<div class="input">
+<i class="fa-solid fa-lock"></i>
+<input type="password" placeholder="Password">
+</div>
+
+<div class="input">
+<i class="fa-solid fa-user-shield"></i>
+<select>
+<option>Select Role</option>
+<option>Fleet Manager</option>
+<option>Dispatcher</option>
+<option>Safety Officer</option>
+<option>Financial Analyst</option>
+</select>
+</div>
+
+<div class="row">
+
+<label>
+<input type="checkbox">
+ Remember Me
+</label>
+
+<a href="#">Forgot Password?</a>
+
+</div>
+
+<button>
+Sign In
+</button>
+
+<div class="divider">
+<span>Secure Login</span>
+</div>
+
+<div class="footer">
+© 2026 TransitOps
+</div>
+
+</div>
+
+</body>
+</html>
