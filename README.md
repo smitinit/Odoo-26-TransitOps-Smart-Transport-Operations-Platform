@@ -40,7 +40,6 @@ TransitOps/
 │
 ├── frontend/     # Next.js application
 ├── backend/      # FastAPI application
-├── database/     # Database scripts and schema
 └── README.md
 ```
 

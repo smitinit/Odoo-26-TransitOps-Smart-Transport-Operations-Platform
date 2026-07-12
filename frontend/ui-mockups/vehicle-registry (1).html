@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TransitOps — Vehicle Registry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --asphalt:#14171C;
+    --panel:#1B1F26;
+    --elevated:#232833;
+    --line:#2A3038;
+    --text:#ECEEF1;
+    --muted:#8B93A1;
+    --muted-dim:#5B6270;
+    --green:#34D399;
+    --green-bg:#193A2E;
+    --blue:#4F8EF7;
+    --blue-bg:#152840;
+    --amber:#F5A623;
+    --amber-bg:#3A2C10;
+    --red:#F0555A;
+    --red-bg:#3A1A1C;
+    --beacon:#FFB238;
+    --radius:8px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--asphalt);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    display:flex;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:220px;
+    flex-shrink:0;
+    background:var(--panel);
+    border-right:1px solid var(--line);
+    padding:28px 0 20px;
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+  }
+  .brand{
+    font-family:'Oswald',sans-serif;
+    font-size:20px;
+    font-weight:600;
+    letter-spacing:0.5px;
+    padding:0 24px 28px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .brand .dot{
+    width:9px; height:9px; border-radius:50%;
+    background:var(--beacon);
+    box-shadow:0 0 8px var(--beacon);
+  }
+  nav.route{
+    position:relative;
+    padding-left:24px;
+  }
+  nav.route::before{
+    content:"";
+    position:absolute;
+    left:33px;
+    top:8px;
+    bottom:8px;
+    width:2px;
+    background:var(--line);
+  }
+  .nav-item{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:11px 16px 11px 0;
+    font-size:14px;
+    color:var(--muted);
+    cursor:pointer;
+    font-weight:500;
+    transition:color .15s ease;
+  }
+  .nav-item:hover{color:var(--text);}
+  .nav-item .stop{
+    width:9px; height:9px;
+    border-radius:50%;
+    background:var(--muted-dim);
+    border:2px solid var(--panel);
+    outline:2px solid var(--line);
+    flex-shrink:0;
+    z-index:1;
+    margin-left:0px;
+    transition:all .15s ease;
+  }
+  .nav-item.active{color:var(--text);}
+  .nav-item.active .stop{
+    background:var(--beacon);
+    outline-color:var(--beacon);
+    box-shadow:0 0 10px rgba(255,178,56,.6);
+  }
+  .nav-item.active::after{
+    content:"";
+    position:absolute;
+    left:-24px;
+    top:0; bottom:0;
+    width:3px;
+    background:var(--beacon);
+  }
+  .sidebar-foot{
+    margin-top:auto;
+    padding:16px 24px 0;
+    font-size:11px;
+    color:var(--muted-dim);
+    border-top:1px solid var(--line);
+    letter-spacing:.3px;
+  }
+
+  /* ---------- MAIN ---------- */
+  .main{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 32px;
+    border-bottom:1px solid var(--line);
+  }
+  .topbar h1{
+    font-family:'Oswald',sans-serif;
+    font-size:22px;
+    font-weight:500;
+    letter-spacing:.3px;
+  }
+  .topbar h1 span{color:var(--muted-dim); font-weight:400;}
+  .user{
+    display:flex; align-items:center; gap:10px;
+    font-size:13px; color:var(--muted);
+  }
+  .role-chip{
+    background:var(--elevated);
+    border:1px solid var(--line);
+    padding:4px 10px 4px 4px;
+    border-radius:20px;
+    display:flex; align-items:center; gap:6px;
+    font-size:12px;
+  }
+  .avatar{
+    width:22px; height:22px; border-radius:50%;
+    background:var(--blue);
+    color:#fff; font-size:11px; font-weight:600;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Inter';
+  }
+
+  .content{padding:24px 32px 40px;}
+
+  .toolbar{
+    display:flex; align-items:center; gap:12px;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+  .search-box{
+    flex:1; min-width:200px;
+    position:relative;
+  }
+  .search-box input{
+    width:100%;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:9px 14px 9px 34px;
+    color:var(--text);
+    font-size:13px;
+    font-family:'Inter';
+  }
+  .search-box input:focus{outline:none; border-color:var(--blue);}
+  .search-box::before{
+    content:"⌕";
+    position:absolute; left:12px; top:50%; transform:translateY(-50%);
+    color:var(--muted-dim);
+    font-size:15px;
+  }
+  select, .reg-search{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:9px 14px;
+    color:var(--text);
+    font-size:13px;
+    font-family:'Inter';
+    cursor:pointer;
+  }
+  select:focus, .reg-search:focus{outline:none; border-color:var(--blue);}
+  .reg-search{font-family:'IBM Plex Mono'; cursor:text; width:170px;}
+
+  .btn-add{
+    margin-left:auto;
+    background:var(--beacon);
+    color:#1A1300;
+    border:none;
+    font-weight:600;
+    font-size:13px;
+    padding:10px 18px;
+    border-radius:var(--radius);
+    cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+    font-family:'Inter';
+    box-shadow:0 0 0 0 rgba(255,178,56,.5);
+    transition:box-shadow .2s ease, transform .1s ease;
+  }
+  .btn-add:hover{box-shadow:0 0 16px rgba(255,178,56,.35);}
+  .btn-add:active{transform:scale(.98);}
+
+  /* ---------- TABLE ---------- */
+  .board{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow:hidden;
+  }
+  table{width:100%; border-collapse:collapse;}
+  thead th{
+    text-align:left;
+    font-size:11px;
+    letter-spacing:.6px;
+    text-transform:uppercase;
+    color:var(--muted-dim);
+    font-weight:600;
+    padding:14px 18px;
+    border-bottom:1px solid var(--line);
+    background:var(--elevated);
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+  }
+  thead th:hover{color:var(--muted);}
+  thead th .arrow{font-size:9px; margin-left:3px; opacity:.6;}
+  tbody tr{
+    border-bottom:1px dashed var(--line);
+  }
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:rgba(255,255,255,0.015);}
+  tbody tr.dispatch-hidden{opacity:.55;}
+  td{
+    padding:14px 18px;
+    font-size:13.5px;
+    vertical-align:middle;
+  }
+  .plate{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:1px;
+    background:var(--elevated);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:4px 9px;
+    color:var(--text);
+    font-weight:500;
+  }
+  .name-cell{font-weight:600;}
+  .type-cell{color:var(--muted);}
+  .mono{font-family:'IBM Plex Mono'; font-variant-numeric:tabular-nums; color:var(--text);}
+  .mono.dim{color:var(--muted);}
+
+  .pill{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:5px 12px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.2px;
+  }
+  .pill .dot{width:6px; height:6px; border-radius:50%;}
+  .pill.available{background:var(--green-bg); color:var(--green);}
+  .pill.available .dot{background:var(--green);}
+  .pill.trip{background:var(--blue-bg); color:var(--blue);}
+  .pill.trip .dot{background:var(--blue); animation:pulse 1.4s infinite;}
+  .pill.shop{background:var(--amber-bg); color:var(--amber);}
+  .pill.shop .dot{background:var(--amber);}
+  .pill.retired{background:var(--red-bg); color:var(--red);}
+  .pill.retired .dot{background:var(--red);}
+  @keyframes pulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(79,142,247,.6);}
+    50%{box-shadow:0 0 0 4px rgba(79,142,247,0);}
+  }
+
+  .rule-note{
+    display:flex; align-items:center; gap:8px;
+    margin-top:14px;
+    font-size:12px;
+    color:var(--muted-dim);
+    font-family:'Inter';
+  }
+  .rule-note .tag{
+    background:var(--elevated);
+    border:1px solid var(--line);
+    color:var(--muted);
+    padding:2px 8px;
+    border-radius:5px;
+    font-size:10.5px;
+    letter-spacing:.4px;
+    text-transform:uppercase;
+    font-weight:600;
+  }
+  .empty-row td{
+    text-align:center;
+    padding:40px 18px;
+    color:var(--muted-dim);
+    font-size:13px;
+  }
+
+  /* ---------- MODAL ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(10,12,15,.6);
+    backdrop-filter:blur(2px);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:50;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    width:480px;
+    max-width:92vw;
+    max-height:88vh;
+    overflow-y:auto;
+    padding:26px 26px 22px;
+  }
+  .modal h2{
+    font-family:'Oswald',sans-serif;
+    font-size:18px;
+    font-weight:500;
+    margin-bottom:4px;
+  }
+  .modal .sub{
+    font-size:12px;
+    color:var(--muted-dim);
+    margin-bottom:20px;
+  }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-size:11.5px;
+    color:var(--muted);
+    margin-bottom:6px;
+    font-weight:600;
+    letter-spacing:.3px;
+    text-transform:uppercase;
+  }
+  .field input, .field select{
+    width:100%;
+    background:var(--elevated);
+    border:1px solid var(--line);
+    border-radius:7px;
+    padding:10px 12px;
+    color:var(--text);
+    font-size:13.5px;
+    font-family:'Inter';
+  }
+  .field input:focus, .field select:focus{outline:none; border-color:var(--blue);}
+  .field.error input{border-color:var(--red);}
+  .field .err-msg{
+    color:var(--red); font-size:11.5px; margin-top:5px; display:none;
+  }
+  .field.error .err-msg{display:block;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .row3{display:grid; grid-template-columns:1.4fr 1fr; gap:12px;}
+  .modal-actions{
+    display:flex; justify-content:flex-end; gap:10px; margin-top:20px;
+  }
+  .btn-ghost{
+    background:transparent; border:1px solid var(--line); color:var(--muted);
+    padding:9px 16px; border-radius:7px; font-size:13px; cursor:pointer; font-family:'Inter'; font-weight:500;
+  }
+  .btn-ghost:hover{color:var(--text); border-color:var(--muted-dim);}
+  .btn-primary{
+    background:var(--beacon); color:#1A1300; border:none;
+    padding:9px 18px; border-radius:7px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Inter';
+  }
+  .btn-primary:hover{box-shadow:0 0 14px rgba(255,178,56,.35);}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="brand"><span class="dot"></span>TransitOps</div>
+  <nav class="route" id="navRoute">
+    <div class="nav-item"><span class="stop"></span>Dashboard</div>
+    <div class="nav-item active"><span class="stop"></span>Fleet</div>
+    <div class="nav-item"><span class="stop"></span>Drivers</div>
+    <div class="nav-item"><span class="stop"></span>Trips</div>
+    <div class="nav-item"><span class="stop"></span>Maintenance</div>
+    <div class="nav-item"><span class="stop"></span>Fuel &amp; Expenses</div>
+    <div class="nav-item"><span class="stop"></span>Analytics</div>
+    <div class="nav-item"><span class="stop"></span>Settings</div>
+  </nav>
+  <div class="sidebar-foot">FLEET MANAGER CONSOLE<br>v0.1 · Hackathon Build</div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <h1>Vehicle Registry <span>· Fleet</span></h1>
+    <div class="user">
+      Raven K.
+      <div class="role-chip"><span>Dispatcher</span><div class="avatar">RK</div></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="toolbar">
+      <select id="typeFilter">
+        <option value="all">Type: All</option>
+        <option value="Van">Van</option>
+        <option value="Truck">Truck</option>
+        <option value="Mini">Mini</option>
+        <option value="Bus">Bus</option>
+      </select>
+      <select id="statusFilter">
+        <option value="all">Status: All</option>
+        <option value="Available">Available</option>
+        <option value="On Trip">On Trip</option>
+        <option value="In Shop">In Shop</option>
+        <option value="Retired">Retired</option>
+      </select>
+      <input class="reg-search" id="regSearch" placeholder="Search reg no...">
+      <div class="search-box">
+        <input id="globalSearch" placeholder="Search vehicle name or model...">
+      </div>
+      <button class="btn-add" id="openModal">+ Add Vehicle</button>
+    </div>
+
+    <div class="board">
+      <table>
+        <thead>
+          <tr>
+            <th data-sort="regNo">Reg. No. (Unique) <span class="arrow">▾</span></th>
+            <th data-sort="name">Name / Model <span class="arrow">▾</span></th>
+            <th data-sort="type">Type <span class="arrow">▾</span></th>
+            <th data-sort="capacity">Capacity <span class="arrow">▾</span></th>
+            <th data-sort="odometer">Odometer <span class="arrow">▾</span></th>
+            <th data-sort="cost">Acq. Cost <span class="arrow">▾</span></th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="rule-note">
+      <span class="tag">Rule</span>
+      Registration No. must be unique · Retired / In Shop vehicles are hidden from the Driver's dispatch pool (shown dimmed here for visibility).
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>Register a Vehicle</h2>
+    <div class="sub">Adds a new unit to the fleet master list.</div>
+
+    <div class="field" id="f-regNo">
+      <label>Registration No. (unique)</label>
+      <input id="in-regNo" placeholder="e.g. GJ01AB1234" style="font-family:'IBM Plex Mono'">
+      <div class="err-msg">This registration number is already in use.</div>
+    </div>
+
+    <div class="row2">
+      <div class="field" id="f-name">
+        <label>Name / Model</label>
+        <input id="in-name" placeholder="e.g. Van-06">
+        <div class="err-msg">Required.</div>
+      </div>
+      <div class="field" id="f-type">
+        <label>Type</label>
+        <select id="in-type">
+          <option>Van</option>
+          <option>Truck</option>
+          <option>Mini</option>
+          <option>Bus</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row3">
+      <div class="field" id="f-capacity">
+        <label>Max Load Capacity</label>
+        <input id="in-capacity" type="number" min="0" placeholder="e.g. 500">
+        <div class="err-msg">Enter a valid capacity.</div>
+      </div>
+      <div class="field">
+        <label>Unit</label>
+        <select id="in-capUnit">
+          <option value="kg">kg</option>
+          <option value="Ton">Ton</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="field" id="f-odometer">
+        <label>Odometer (km)</label>
+        <input id="in-odometer" type="number" min="0" placeholder="e.g. 0">
+      </div>
+      <div class="field" id="f-cost">
+        <label>Acquisition Cost (₹)</label>
+        <input id="in-cost" type="number" min="0" placeholder="e.g. 620000">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Status</label>
+      <select id="in-status">
+        <option>Available</option>
+        <option>On Trip</option>
+        <option>In Shop</option>
+        <option>Retired</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" id="cancelModal">Cancel</button>
+      <button class="btn-primary" id="saveVehicle">Save Vehicle</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let vehicles = [
+  {regNo:"GJ01AB4512", name:"Van-05", type:"Van", capacity:500, capUnit:"kg", odometer:74000, cost:620000, status:"Available"},
+  {regNo:"GJ01AB9987", name:"Truck-11", type:"Truck", capacity:5, capUnit:"Ton", odometer:182000, cost:2450000, status:"On Trip"},
+  {regNo:"GJ01AB1120", name:"Mini-03", type:"Mini", capacity:1, capUnit:"Ton", odometer:66000, cost:410000, status:"In Shop"},
+  {regNo:"GJ01AB0083", name:"Van-09", type:"Van", capacity:750, capUnit:"kg", odometer:241900, cost:590000, status:"Retired"},
+];
+
+let sortKey = null, sortDir = 1;
+
+function statusClass(status){
+  return {"Available":"available","On Trip":"trip","In Shop":"shop","Retired":"retired"}[status];
+}
+
+function fmtNum(n){ return n.toLocaleString('en-IN'); }
+
+function render(){
+  const typeF = document.getElementById('typeFilter').value;
+  const statusF = document.getElementById('statusFilter').value;
+  const regQ = document.getElementById('regSearch').value.trim().toLowerCase();
+  const globalQ = document.getElementById('globalSearch').value.trim().toLowerCase();
+
+  let rows = vehicles.filter(v=>{
+    if(typeF !== 'all' && v.type !== typeF) return false;
+    if(statusF !== 'all' && v.status !== statusF) return false;
+    if(regQ && !v.regNo.toLowerCase().includes(regQ)) return false;
+    if(globalQ && !v.name.toLowerCase().includes(globalQ)) return false;
+    return true;
+  });
+
+  if(sortKey){
+    rows = rows.slice().sort((a,b)=>{
+      let av=a[sortKey], bv=b[sortKey];
+      if(typeof av === 'string'){ av=av.toLowerCase(); bv=bv.toLowerCase(); }
+      if(av<bv) return -1*sortDir;
+      if(av>bv) return 1*sortDir;
+      return 0;
+    });
+  }
+
+  const tbody = document.getElementById('tableBody');
+  if(rows.length===0){
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No vehicles match these filters.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(v=>{
+    const hidden = v.status==='Retired' || v.status==='In Shop';
+    return `
+    <tr class="${hidden ? 'dispatch-hidden':''}">
+      <td><span class="plate">${v.regNo}</span></td>
+      <td class="name-cell">${v.name}</td>
+      <td class="type-cell">${v.type}</td>
+      <td class="mono">${v.capacity} ${v.capUnit}</td>
+      <td class="mono dim">${fmtNum(v.odometer)}</td>
+      <td class="mono">₹${fmtNum(v.cost)}</td>
+      <td><span class="pill ${statusClass(v.status)}"><span class="dot"></span>${v.status}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+document.querySelectorAll('th[data-sort]').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const key = th.dataset.sort;
+    const map = {regNo:'regNo', name:'name', type:'type', capacity:'capacity', odometer:'odometer', cost:'cost'};
+    if(sortKey === map[key]) sortDir *= -1; else { sortKey = map[key]; sortDir = 1; }
+    render();
+  });
+});
+
+['typeFilter','statusFilter','regSearch','globalSearch'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', render);
+  document.getElementById(id).addEventListener('change', render);
+});
+
+// modal
+const overlay = document.getElementById('overlay');
+document.getElementById('openModal').addEventListener('click', ()=>{
+  overlay.classList.add('open');
+});
+document.getElementById('cancelModal').addEventListener('click', closeModal);
+overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeModal(); });
+
+function closeModal(){
+  overlay.classList.remove('open');
+  ['regNo','name','capacity'].forEach(f=>document.getElementById('f-'+f).classList.remove('error'));
+  document.getElementById('in-regNo').value='';
+  document.getElementById('in-name').value='';
+  document.getElementById('in-capacity').value='';
+  document.getElementById('in-odometer').value='';
+  document.getElementById('in-cost').value='';
+}
+
+document.getElementById('saveVehicle').addEventListener('click', ()=>{
+  const regNo = document.getElementById('in-regNo').value.trim().toUpperCase();
+  const name = document.getElementById('in-name').value.trim();
+  const type = document.getElementById('in-type').value;
+  const capacity = parseFloat(document.getElementById('in-capacity').value);
+  const capUnit = document.getElementById('in-capUnit').value;
+  const odometer = parseFloat(document.getElementById('in-odometer').value) || 0;
+  const cost = parseFloat(document.getElementById('in-cost').value) || 0;
+  const status = document.getElementById('in-status').value;
+
+  let valid = true;
+  const dupe = vehicles.some(v => v.regNo.toUpperCase() === regNo);
+  document.getElementById('f-regNo').classList.toggle('error', !regNo || dupe);
+  if(!regNo || dupe) valid = false;
+
+  document.getElementById('f-name').classList.toggle('error', !name);
+  if(!name) valid = false;
+
+  document.getElementById('f-capacity').classList.toggle('error', !(capacity > 0));
+  if(!(capacity > 0)) valid = false;
+
+  if(!valid) return;
+
+  vehicles.push({regNo, name, type, capacity, capUnit, odometer, cost, status});
+  closeModal();
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
